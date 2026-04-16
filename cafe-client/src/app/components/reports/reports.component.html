@@ -1,0 +1,154 @@
+<div class="reports-container">
+  <header class="reports-header">
+    <div class="header-left">
+      <button class="back-button" (click)="goBack()">← Назад</button>
+      <h1>Отчёты и аналитика</h1>
+    </div>
+    <div class="header-right">
+      <span class="user-role">ADMIN</span>
+    </div>
+  </header>
+
+  <div class="reports-content">
+    <div class="date-filter">
+      <label for="date-select">Выберите дату:</label>
+      <input
+        type="date"
+        id="date-select"
+        [(ngModel)]="selectedDate"
+        (change)="onDateChange()"
+        class="date-input"
+      />
+    </div>
+
+    @if (isLoading) {
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p>Загрузка отчётов...</p>
+      </div>
+    } @else {
+      <!-- Daily Report -->
+      @if (dailyReport) {
+        <div class="report-section">
+          <h2>Дневной отчёт за {{ selectedDate | date:'dd.MM.yyyy' }}</h2>
+          
+          <div class="report-grid">
+            <div class="report-card">
+              <h3>Всего заказов</h3>
+              <p class="report-value">{{ dailyReport.totalOrders }}</p>
+            </div>
+            
+            <div class="report-card">
+              <h3>Общая выручка</h3>
+              <p class="report-value">{{ dailyReport.totalRevenue | currency:'RUB' }}</p>
+            </div>
+          </div>
+
+          <div class="status-breakdown">
+            <h3>Заказы по статусам</h3>
+            <div class="status-grid">
+              <div class="status-item">
+                <span class="status-label">Ожидает</span>
+                <span class="status-count pending">{{ dailyReport.ordersByStatus.PENDING }}</span>
+              </div>
+              <div class="status-item">
+                <span class="status-label">В работе</span>
+                <span class="status-count in-progress">{{ dailyReport.ordersByStatus.IN_PROGRESS }}</span>
+              </div>
+              <div class="status-item">
+                <span class="status-label">Оплачено</span>
+                <span class="status-count paid">{{ dailyReport.ordersByStatus.PAID }}</span>
+              </div>
+              <div class="status-item">
+                <span class="status-label">Завершено</span>
+                <span class="status-count completed">{{ dailyReport.ordersByStatus.COMPLETED }}</span>
+              </div>
+              <div class="status-item">
+                <span class="status-label">Отменено</span>
+                <span class="status-count cancelled">{{ dailyReport.ordersByStatus.CANCELLED }}</span>
+              </div>
+            </div>
+          </div>
+
+          @if (dailyReport.topItems && dailyReport.topItems.length > 0) {
+            <div class="top-items">
+              <h3>Топ блюда дня</h3>
+              <div class="items-list">
+                @for (item of dailyReport.topItems; track item.id) {
+                  <div class="item-row">
+                    <span class="item-name">{{ item.name }}</span>
+                    <span class="item-quantity">{{ item.quantity }} шт.</span>
+                    <span class="item-revenue">{{ item.revenue | currency:'RUB' }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Popular Items -->
+      <div class="report-section">
+        <h2>Популярные блюда</h2>
+        <div class="items-grid">
+          @for (item of popularItems; track item.id) {
+            <div class="popular-item-card">
+              <div class="item-header">
+                <h4>{{ item.name }}</h4>
+                <span class="item-category">{{ getCategoryDisplayName(item.category) }}</span>
+              </div>
+              <div class="item-stats">
+                <div class="stat">
+                  <span class="stat-label">Заказов:</span>
+                  <span class="stat-value">{{ item.totalOrders }}</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">Выручка:</span>
+                  <span class="stat-value">{{ item.totalRevenue | currency:'RUB' }}</span>
+                </div>
+                @if (item.averageRating) {
+                  <div class="stat">
+                    <span class="stat-label">Рейтинг:</span>
+                    <span class="stat-value">{{ item.averageRating | number:'1.1' }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Sales by Category -->
+      <div class="report-section">
+        <h2>Продажи по категориям</h2>
+        <div class="category-grid">
+          @for (category of salesByCategory; track category.category) {
+            <div class="category-card">
+              <h4>{{ getCategoryDisplayName(category.category) }}</h4>
+              <div class="category-stats">
+                <div class="stat">
+                  <span class="stat-label">Заказов:</span>
+                  <span class="stat-value">{{ category.totalOrders }}</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">Выручка:</span>
+                  <span class="stat-value">{{ category.totalRevenue | currency:'RUB' }}</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label">Доля:</span>
+                  <span class="stat-value">{{ category.percentage | number:'1.1' }}%</span>
+                </div>
+              </div>
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill"
+                  [style.width.%]="category.percentage"
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

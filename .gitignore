@@ -1,0 +1,17 @@
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Логи
+*.log
+
+# Временные файлы
+prompt_frontend.txt
+sqlScript2.0.txt
+
+# Сборки и зависимости
+**/target/
+**/node_modules/
+**/dist/
+**/.mvn/

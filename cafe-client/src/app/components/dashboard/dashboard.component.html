@@ -1,0 +1,82 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="header-left">
+      <h1>Coffee&Go</h1>
+    </div>
+    <div class="header-right">
+      <div class="user-info">
+        <span>{{ currentUser?.fullName || currentUser?.username }}</span>
+        <span class="user-role">{{ currentUser?.role }}</span>
+      </div>
+      <button class="logout-button" (click)="logout()">Выход</button>
+    </div>
+  </header>
+
+  <main class="dashboard-main">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon revenue-icon">💰</div>
+        <div class="stat-content">
+          <h3>Выручка сегодня</h3>
+          <p class="stat-value">{{ todayRevenue | currency:'RUB' }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon orders-icon">📋</div>
+        <div class="stat-content">
+          <h3>Заказы сегодня</h3>
+          <p class="stat-value">{{ todayOrders }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon pending-icon">⏳</div>
+        <div class="stat-content">
+          <h3>В ожидании</h3>
+          <p class="stat-value">{{ pendingOrders }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="navigation-grid">
+      <button class="nav-card" (click)="navigateToMenu()">
+        <div class="nav-icon">🍽️</div>
+        <h3>Меню</h3>
+        <p>Управление блюдами</p>
+      </button>
+
+      <button class="nav-card" (click)="navigateToOrders()">
+        <div class="nav-icon">📦</div>
+        <h3>Заказы</h3>
+        <p>Обработка заказов</p>
+      </button>
+
+      <button class="nav-card" (click)="navigateToProfile()">
+        <div class="nav-icon">👤</div>
+        <h3>Профиль</h3>
+        <p>Мои данные и пароль</p>
+      </button>
+
+      @if (currentUser?.role === 'ADMIN') {
+        <button class="nav-card" (click)="navigateToStaff()">
+          <div class="nav-icon">👥</div>
+          <h3>Персонал</h3>
+          <p>Управление сотрудниками</p>
+        </button>
+
+        <button class="nav-card" (click)="navigateToSchedule()">
+          <div class="nav-icon">📅</div>
+          <h3>График работы</h3>
+          <p>Расписание и ЗП</p>
+        </button>
+
+        <button class="nav-card" (click)="navigateToReports()">
+          <div class="nav-icon">📊</div>
+          <h3>Отчёты</h3>
+          <p>Аналитика и статистика</p>
+        </button>
+      }
+    </div>
+  </main>
+</div>

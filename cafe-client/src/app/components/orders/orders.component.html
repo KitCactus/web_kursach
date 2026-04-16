@@ -1,0 +1,115 @@
+<div class="orders-container">
+  <header class="orders-header">
+    <div class="header-left">
+      <button class="back-button" (click)="goBack()">← Назад</button>
+      <h1>Управление заказами</h1>
+    </div>
+    <div class="header-right">
+      <div class="revenue-display">
+        <span class="revenue-label">Выручка сегодня:</span>
+        <span class="revenue-value">{{ todayRevenue | currency:'RUB' }}</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="orders-content">
+    <div class="filters-section">
+      <div class="search-box">
+        <input
+          type="text"
+          placeholder="Поиск по номеру или имени клиента..."
+          [(ngModel)]="searchTerm"
+          (input)="filterOrders()"
+          class="search-input"
+        />
+      </div>
+      
+      <select
+        [(ngModel)]="selectedStatus"
+        (change)="filterOrders()"
+        class="status-filter"
+      >
+        <option value="">Все статусы</option>
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ getStatusDisplayName(status) }}</option>
+        }
+      </select>
+    </div>
+
+    @if (isLoading) {
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p>Загрузка заказов...</p>
+      </div>
+    } @else {
+      <div class="orders-grid">
+        @for (order of filteredOrders; track order.id) {
+          <div class="order-card" [style.border-color]="getStatusColor(order.status)">
+            <div class="order-header">
+              <div class="order-number">
+                <strong>Заказ #{{ order.id }}</strong>
+                <span 
+                  class="order-status"
+                  [style.background-color]="getStatusColor(order.status)"
+                >
+                  {{ getStatusDisplayName(order.status) }}
+                </span>
+              </div>
+              <div class="order-time">
+                {{ (order.orderDate || order.createdAt) | date:'HH:mm' }}
+              </div>
+            </div>
+
+            @if (order.clientName) {
+              <div class="customer-info">
+                <span class="customer-name">{{ order.clientName }}</span>
+              </div>
+            }
+
+            <div class="order-items">
+              @for (item of order.items; track item.id) {
+                <div class="order-item">
+                  <span class="item-quantity">{{ item.quantity }}x</span>
+                  <span class="item-name">{{ item.menuItemName }}</span>
+                  <span class="item-price">{{ item.price | currency:'RUB' }}</span>
+                </div>
+              }
+            </div>
+
+            @if (order.notes) {
+              <div class="order-notes">
+                <strong>Примечания:</strong> {{ order.notes }}
+              </div>
+            }
+
+            <div class="order-footer">
+              <div class="order-total">
+                <strong>Итого:</strong> {{ order.totalAmount | currency:'RUB' }}
+              </div>
+              
+              <div class="order-actions">
+                @for (status of statuses; track status) {
+                  @if (canUpdateTo(order.status, status)) {
+                    <button
+                      class="status-button"
+                      [style.background-color]="getStatusColor(status)"
+                      (click)="updateOrderStatus(order, status)"
+                    >
+                      {{ getStatusDisplayName(status) }}
+                    </button>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (filteredOrders.length === 0) {
+        <div class="empty-state">
+          <p>Заказы не найдены</p>
+        </div>
+      }
+    }
+  </div>
+</div>

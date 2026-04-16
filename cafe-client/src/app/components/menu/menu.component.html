@@ -1,0 +1,230 @@
+<div class="menu-container">
+  <header class="menu-header">
+    <div class="header-left">
+      <button class="back-button" (click)="goBack()">← Назад</button>
+      <h1>Меню</h1>
+    </div>
+    <div class="header-right">
+      @if (isAdmin) {
+        <button class="create-button" (click)="openCreateModal()">+ Добавить блюдо</button>
+      }
+      <span class="user-role">{{ isAdmin ? 'ADMIN' : 'USER' }}</span>
+    </div>
+  </header>
+
+  <div class="menu-content">
+    <div class="filters-section">
+      <div class="search-box">
+        <input
+          type="text"
+          placeholder="Поиск блюд..."
+          [(ngModel)]="searchTerm"
+          (input)="filterItems()"
+          class="search-input"
+        />
+      </div>
+
+      <select
+        [(ngModel)]="selectedCategory"
+        (change)="filterItems()"
+        class="category-filter"
+      >
+        <option value="">Все категории</option>
+        @for (category of categories; track category) {
+          <option [value]="category">{{ getCategoryDisplayName(category) }}</option>
+        }
+      </select>
+    </div>
+
+    @if (isLoading) {
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p>Загрузка меню...</p>
+      </div>
+    } @else {
+      <div class="menu-grid">
+        @for (item of filteredItems; track item.id) {
+          <div class="menu-item-card" [class.hidden]="item.isHidden">
+            @if (item.photoFileId) {
+              <div class="item-image">
+                <img [src]="item.photoFileId" [alt]="item.name" />
+              </div>
+            }
+
+            <div class="item-content">
+              <div class="item-header">
+                <h3>{{ item.name }}</h3>
+                <span class="item-category">{{ getCategoryDisplayName(item.category) }}</span>
+              </div>
+
+              <p class="item-description">{{ item.description }}</p>
+
+              <div class="item-footer">
+                <span class="item-price">{{ item.price | currency:'RUB' }}</span>
+                <div class="item-actions">
+                  @if (isAdmin) {
+                    <button class="action-button edit" (click)="openEditModal(item)" title="Редактировать">✏️</button>
+                    <button class="action-button delete" (click)="deleteItem(item)" title="Удалить">🗑️</button>
+                  }
+                </div>
+              </div>
+
+              <div class="item-status">
+                <button
+                  class="status-toggle"
+                  [class.available]="item.isAvailable"
+                  [class.unavailable]="!item.isAvailable"
+                  (click)="toggleAvailability(item)"
+                >
+                  @if (item.isAvailable) { ✓ Доступно } @else { ✗ Недоступно }
+                </button>
+
+                @if (isAdmin) {
+                  <button
+                    class="visibility-toggle"
+                    [class.visible]="!item.isHidden"
+                    (click)="toggleVisibility(item)"
+                  >
+                    @if (item.isHidden) { 👁️‍🗨️ Скрыто } @else { 👁️ Видимо }
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (filteredItems.length === 0) {
+        <div class="empty-state">
+          <p>Блюда не найдены</p>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- Create Modal -->
+@if (isCreateModalOpen) {
+  <div class="modal-overlay" (click)="closeCreateModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Добавить блюдо</h2>
+        <button class="close-button" (click)="closeCreateModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Название <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="newItem.name" [class.input-error]="createErrors.name" placeholder="Введите название" />
+          @if (createErrors.name) { <span class="field-error">{{ createErrors.name }}</span> }
+        </div>
+
+        <div class="form-group">
+          <label>Описание</label>
+          <textarea [(ngModel)]="newItem.description" placeholder="Введите описание (необязательно)"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Цена (₽) <span class="required">*</span></label>
+            <input type="number" [(ngModel)]="newItem.price" min="0.01" step="0.01" [class.input-error]="createErrors.price" placeholder="0.00" />
+            @if (createErrors.price) { <span class="field-error">{{ createErrors.price }}</span> }
+          </div>
+
+          <div class="form-group">
+            <label>Категория <span class="required">*</span></label>
+            <select [(ngModel)]="newItem.category">
+              @for (category of categories; track category) {
+                <option [value]="category">{{ getCategoryDisplayName(category) }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Подкатегория</label>
+          <input type="text" [(ngModel)]="newItem.subcategory" placeholder="Например: Латте, Эспрессо (необязательно)" />
+        </div>
+
+        <div class="form-group">
+          <label>Фото блюда</label>
+          @if (newItem.photoFileId) {
+            <img [src]="newItem.photoFileId" style="width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
+          }
+          <input type="file" accept="image/*" (change)="onPhotoSelected($event, false)" />
+          @if (isUploadingPhoto) {
+            <small>Загрузка фото...</small>
+          }
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="cancel-button" (click)="closeCreateModal()">Отмена</button>
+        <button class="save-button" (click)="createItem()">Создать</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Edit Modal -->
+@if (isEditModalOpen && selectedItem) {
+  <div class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Редактировать блюдо</h2>
+        <button class="close-button" (click)="closeEditModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Название <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="selectedItem.name" [class.input-error]="editErrors.name" placeholder="Введите название" />
+          @if (editErrors.name) { <span class="field-error">{{ editErrors.name }}</span> }
+        </div>
+
+        <div class="form-group">
+          <label>Описание</label>
+          <textarea [(ngModel)]="selectedItem.description" placeholder="Введите описание (необязательно)"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Цена (₽) <span class="required">*</span></label>
+            <input type="number" [(ngModel)]="selectedItem.price" min="0.01" step="0.01" [class.input-error]="editErrors.price" />
+            @if (editErrors.price) { <span class="field-error">{{ editErrors.price }}</span> }
+          </div>
+
+          <div class="form-group">
+            <label>Категория <span class="required">*</span></label>
+            <select [(ngModel)]="selectedItem.category">
+              @for (category of categories; track category) {
+                <option [value]="category">{{ getCategoryDisplayName(category) }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Подкатегория</label>
+          <input type="text" [(ngModel)]="selectedItem.subcategory" placeholder="Например: Латте, Эспрессо (необязательно)" />
+        </div>
+
+        <div class="form-group">
+          <label>Фото блюда</label>
+          @if (selectedItem.photoFileId) {
+            <img [src]="selectedItem.photoFileId" style="width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
+          }
+          <input type="file" accept="image/*" (change)="onPhotoSelected($event, true)" />
+          @if (isUploadingPhoto) {
+            <small>Загрузка фото...</small>
+          }
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="cancel-button" (click)="closeEditModal()">Отмена</button>
+        <button class="save-button" (click)="updateItem()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+}

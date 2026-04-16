@@ -1,0 +1,138 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FDF8F0 0%, #F0E8FF 100%);
+  padding: 20px;
+}
+
+.login-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 8px 32px rgba(184, 169, 212, 0.1);
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid rgba(184, 169, 212, 0.2);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login-header h1 {
+  color: #4A4A4A;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.login-header p {
+  color: #6B6B6B;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  color: #4A4A4A;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.form-input {
+  padding: 12px 16px;
+  border: 2px solid #E8E8E8;
+  border-radius: 16px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #B8A9D4;
+  box-shadow: 0 0 0 3px rgba(184, 169, 212, 0.1);
+}
+
+.login-button {
+  background: #B8A9D4;
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.login-button:hover:not(:disabled) {
+  background: #A698C0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(184, 169, 212, 0.3);
+}
+
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background: rgba(216, 106, 106, 0.1);
+  color: #D86A6A;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(216, 106, 106, 0.3);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.required {
+  color: #D86A6A;
+}
+
+.form-input.input-error {
+  border-color: #D86A6A;
+  box-shadow: 0 0 0 3px rgba(216, 106, 106, 0.1);
+}
+
+.field-error {
+  color: #D86A6A;
+  font-size: 0.8rem;
+  margin-top: 4px;
+  display: block;
+}

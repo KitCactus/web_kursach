@@ -1,0 +1,225 @@
+<div class="schedule-container">
+  <header class="schedule-header">
+    <div class="header-left">
+      <button class="back-button" (click)="goBack()">← Назад</button>
+      <h1>График работы и ЗП</h1>
+    </div>
+    <div class="header-right">
+      <button class="create-button" (click)="openCreateModal()">+ Добавить смену</button>
+      <span class="user-role">ADMIN</span>
+    </div>
+  </header>
+
+  <div class="schedule-content">
+    <div class="summary-section">
+      <div class="summary-card">
+        <h3>Недельная выплата</h3>
+        <p class="summary-value">{{ getWeeklyTotal() | currency:'RUB' }}</p>
+      </div>
+      <div class="summary-card">
+        <h3>Месячная выплата (приблизительно)</h3>
+        <p class="summary-value">{{ getMonthlyTotal() | currency:'RUB' }}</p>
+      </div>
+    </div>
+
+    @if (isLoading) {
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p>Загрузка графика...</p>
+      </div>
+    } @else {
+      <div class="schedule-grid">
+        @for (item of scheduleItems; track item.id) {
+          <div class="schedule-card">
+            <div class="schedule-header">
+              <div class="employee-info">
+                <h3>{{ item.userName }}</h3>
+                <span class="schedule-date">{{ item.date | date:'dd.MM.yyyy' }}</span>
+              </div>
+              <div class="shift-info">
+                <span 
+                  class="shift-type"
+                  [class.morning]="item.shiftType === 'MORNING'"
+                  [class.evening]="item.shiftType === 'EVENING'"
+                  [class.night]="item.shiftType === 'NIGHT'"
+                >
+                  {{ getShiftTypeName(item.shiftType) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="schedule-details">
+              <div class="time-info">
+                <div class="time-item">
+                  <span class="time-label">Начало:</span>
+                  <span class="time-value">{{ item.startTime }}</span>
+                </div>
+                <div class="time-item">
+                  <span class="time-label">Конец:</span>
+                  <span class="time-value">{{ item.endTime }}</span>
+                </div>
+                <div class="time-item">
+                  <span class="time-label">Часы:</span>
+                  <span class="time-value">{{ item.hoursWorked | number:'1.1' }}</span>
+                </div>
+              </div>
+              
+              <div class="payment-info">
+                <div class="payment-item">
+                  <span class="payment-label">Ставка/час:</span>
+                  <span class="payment-value">{{ item.hourlyRate | currency:'RUB' }}</span>
+                </div>
+                <div class="payment-item total">
+                  <span class="payment-label">За день:</span>
+                  <span class="payment-value">{{ item.dailyEarnings | currency:'RUB' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="schedule-actions">
+              <button
+                class="action-button edit"
+                (click)="openEditModal(item)"
+                title="Редактировать"
+              >
+                ✏️
+              </button>
+              <button
+                class="action-button delete"
+                (click)="deleteScheduleItem(item)"
+                title="Удалить"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (scheduleItems.length === 0) {
+        <div class="empty-state">
+          <p>Смены не найдены</p>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- Create Modal -->
+@if (isCreateModalOpen) {
+  <div class="modal-overlay" (click)="closeCreateModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Добавить смену</h2>
+        <button class="close-button" (click)="closeCreateModal()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Сотрудник</label>
+          <select [(ngModel)]="newScheduleItem.userId">
+            <option value="">Выберите сотрудника</option>
+            @for (user of users; track user.id) {
+              <option [value]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
+            }
+          </select>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Дата</label>
+            <input type="date" [(ngModel)]="newScheduleItem.date" />
+          </div>
+          
+          <div class="form-group">
+            <label>Тип смены</label>
+            <select [(ngModel)]="newScheduleItem.shiftType">
+              <option value="MORNING">{{ getShiftTypeName('MORNING') }}</option>
+              <option value="EVENING">{{ getShiftTypeName('EVENING') }}</option>
+              <option value="NIGHT">{{ getShiftTypeName('NIGHT') }}</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Время начала</label>
+            <input type="time" [(ngModel)]="newScheduleItem.startTime" />
+          </div>
+          
+          <div class="form-group">
+            <label>Время окончания</label>
+            <input type="time" [(ngModel)]="newScheduleItem.endTime" />
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Ставка в час (руб)</label>
+          <input type="number" [(ngModel)]="newScheduleItem.hourlyRate" min="0" />
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="cancel-button" (click)="closeCreateModal()">Отмена</button>
+        <button class="save-button" (click)="createScheduleItem()">Создать</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Edit Modal -->
+@if (isEditModalOpen && selectedItem) {
+  <div class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Редактировать смену</h2>
+        <button class="close-button" (click)="closeEditModal()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Сотрудник</label>
+          <input type="text" [value]="selectedItem.userName" disabled />
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Дата</label>
+            <input type="date" [(ngModel)]="selectedItem.date" />
+          </div>
+          
+          <div class="form-group">
+            <label>Тип смены</label>
+            <select [(ngModel)]="selectedItem.shiftType">
+              <option value="MORNING">{{ getShiftTypeName('MORNING') }}</option>
+              <option value="EVENING">{{ getShiftTypeName('EVENING') }}</option>
+              <option value="NIGHT">{{ getShiftTypeName('NIGHT') }}</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Время начала</label>
+            <input type="time" [(ngModel)]="selectedItem.startTime" />
+          </div>
+          
+          <div class="form-group">
+            <label>Время окончания</label>
+            <input type="time" [(ngModel)]="selectedItem.endTime" />
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Ставка в час (руб)</label>
+          <input type="number" [(ngModel)]="selectedItem.hourlyRate" min="0" />
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="cancel-button" (click)="closeEditModal()">Отмена</button>
+        <button class="save-button" (click)="updateScheduleItem()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,260 @@
+<div class="staff-container">
+  <header class="staff-header">
+    <div class="header-left">
+      <button class="back-button" (click)="goBack()">← Назад</button>
+      <h1>Управление персоналом</h1>
+    </div>
+    <div class="header-right">
+      <button class="create-button" (click)="openCreateModal()">+ Добавить сотрудника</button>
+      <span class="user-role">ADMIN</span>
+    </div>
+  </header>
+
+  <div class="staff-content">
+    <div class="filters-section">
+      <div class="search-box">
+        <input
+          type="text"
+          placeholder="Поиск сотрудников..."
+          [(ngModel)]="searchTerm"
+          (input)="filterUsers()"
+          class="search-input"
+        />
+      </div>
+      
+      <select
+        [(ngModel)]="selectedRole"
+        (change)="filterUsers()"
+        class="role-filter"
+      >
+        <option value="">Все роли</option>
+        @for (role of roles; track role) {
+          <option [value]="role">{{ role }}</option>
+        }
+      </select>
+    </div>
+
+    @if (isLoading) {
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p>Загрузка сотрудников...</p>
+      </div>
+    } @else {
+      <div class="staff-grid">
+        @for (user of filteredUsers; track user.id) {
+          <div class="staff-card" [class.inactive]="!user.isActive">
+            <div class="staff-header">
+              <div class="staff-info">
+                <h3>{{ user.firstName }} {{ user.lastName }}</h3>
+                <span class="staff-username">@{{ user.username }}</span>
+                <span 
+                  class="staff-role"
+                  [class.admin]="user.role === 'ADMIN'"
+                  [class.staff]="user.role === 'USER'"
+                >
+                  {{ user.role }}
+                </span>
+              </div>
+              <div class="staff-status">
+                @if (user.isActive) {
+                  <span class="status-indicator active">● Активен</span>
+                } @else {
+                  <span class="status-indicator inactive">● Неактивен</span>
+                }
+                @if (user.lastLoginAt) {
+                  <span class="last-login">Вход: {{ user.lastLoginAt | date:'dd.MM HH:mm' }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="staff-details">
+              @if (user.email) {
+                <div class="detail-item">
+                  <span class="detail-label">Email:</span>
+                  <span class="detail-value">{{ user.email }}</span>
+                </div>
+              }
+              
+              @if (user.phone) {
+                <div class="detail-item">
+                  <span class="detail-label">Телефон:</span>
+                  <span class="detail-value">{{ user.phone }}</span>
+                </div>
+              }
+              
+              <div class="detail-item">
+                <span class="detail-label">Создан:</span>
+                <span class="detail-value">{{ user.createdAt | date:'dd.MM.yyyy' }}</span>
+              </div>
+            </div>
+
+            <div class="staff-actions">
+              <button
+                class="action-button edit"
+                (click)="openEditModal(user)"
+                title="Редактировать"
+              >
+                ✏️
+              </button>
+
+              <button
+                class="action-button password"
+                (click)="resetPassword(user)"
+                title="Сменить пароль"
+              >
+                🔐
+              </button>
+
+              @if (user.id !== currentUserId) {
+                <button
+                  class="action-button role"
+                  (click)="toggleUserRole(user)"
+                  title="Сменить роль"
+                >
+                  👑
+                </button>
+
+                <button
+                  class="action-button delete"
+                  (click)="deleteUser(user)"
+                  title="Удалить"
+                >
+                  🗑️
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (filteredUsers.length === 0) {
+        <div class="empty-state">
+          <p>Сотрудники не найдены</p>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- Create Modal -->
+@if (isCreateModalOpen) {
+  <div class="modal-overlay" (click)="closeCreateModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Добавить сотрудника</h2>
+        <button class="close-button" (click)="closeCreateModal()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Имя <span class="required">*</span></label>
+            <input type="text" [(ngModel)]="newUser.firstName" [class.input-error]="createErrors.firstName" placeholder="Введите имя" />
+            @if (createErrors.firstName) { <span class="field-error">{{ createErrors.firstName }}</span> }
+          </div>
+
+          <div class="form-group">
+            <label>Фамилия</label>
+            <input type="text" [(ngModel)]="newUser.lastName" placeholder="Введите фамилию" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Логин <span class="required">*</span></label>
+            <input type="text" [(ngModel)]="newUser.username" [class.input-error]="createErrors.username" placeholder="Введите логин" />
+            @if (createErrors.username) { <span class="field-error">{{ createErrors.username }}</span> }
+          </div>
+
+          <div class="form-group">
+            <label>Пароль <span class="required">*</span></label>
+            <input type="password" [(ngModel)]="newUser.password" [class.input-error]="createErrors.password" placeholder="Введите пароль" />
+            @if (createErrors.password) { <span class="field-error">{{ createErrors.password }}</span> }
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="newUser.email" placeholder="example@mail.ru" />
+          </div>
+
+          <div class="form-group">
+            <label>Телефон</label>
+            <input type="tel" [(ngModel)]="newUser.phone" placeholder="+7 (999) 999-99-99" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Роль <span class="required">*</span></label>
+          <select [(ngModel)]="newUser.role">
+            @for (role of roles; track role) {
+              <option [value]="role">{{ role }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="cancel-button" (click)="closeCreateModal()">Отмена</button>
+        <button class="save-button" (click)="createUser()">Создать</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Edit Modal -->
+@if (isEditModalOpen && selectedUser) {
+  <div class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Редактировать сотрудника</h2>
+        <button class="close-button" (click)="closeEditModal()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Имя</label>
+            <input type="text" [(ngModel)]="selectedUser.firstName" />
+          </div>
+          
+          <div class="form-group">
+            <label>Фамилия</label>
+            <input type="text" [(ngModel)]="selectedUser.lastName" />
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Логин</label>
+          <input type="text" [(ngModel)]="selectedUser.username" />
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="selectedUser.email" />
+          </div>
+          
+          <div class="form-group">
+            <label>Телефон</label>
+            <input type="tel" [(ngModel)]="selectedUser.phone" />
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Статус</label>
+          <select [(ngModel)]="selectedUser.isActive">
+            <option [ngValue]="true">Активен</option>
+            <option [ngValue]="false">Неактивен</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="cancel-button" (click)="closeEditModal()">Отмена</button>
+        <button class="save-button" (click)="updateUser()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+}
