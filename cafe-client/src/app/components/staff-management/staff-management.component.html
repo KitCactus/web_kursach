@@ -42,12 +42,15 @@
     } @else {
       <div class="staff-grid">
         @for (user of filteredUsers; track user.id) {
-          <div class="staff-card" [class.inactive]="!user.isActive">
+          <div class="staff-card">
+            @if (user.id === currentUserId) {
+              <div class="you-badge">ВЫ</div>
+            }
             <div class="staff-header">
               <div class="staff-info">
                 <h3>{{ user.firstName }} {{ user.lastName }}</h3>
                 <span class="staff-username">@{{ user.username }}</span>
-                <span 
+                <span
                   class="staff-role"
                   [class.admin]="user.role === 'ADMIN'"
                   [class.staff]="user.role === 'USER'"

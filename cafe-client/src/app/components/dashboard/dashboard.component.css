@@ -71,6 +71,40 @@
   margin: 0 auto;
 }
 
+.clock-widget {
+  background: linear-gradient(135deg, rgba(184, 169, 212, 0.15) 0%, rgba(90, 158, 90, 0.1) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 50px;
+  margin-bottom: 40px;
+  box-shadow: 0 8px 24px rgba(184, 169, 212, 0.2);
+  border: 2px solid rgba(184, 169, 212, 0.4);
+  text-align: center;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.clock-time {
+  font-family: 'Courier New', monospace;
+  font-size: 5rem;
+  font-weight: 700;
+  color: #B8A9D4;
+  letter-spacing: 4px;
+  line-height: 1.1;
+  text-shadow: 0 2px 8px rgba(184, 169, 212, 0.3);
+}
+
+.clock-date {
+  font-family: 'Courier New', monospace;
+  font-size: 1.5rem;
+  color: #B8A9D4;
+  margin-top: 16px;
+  text-transform: capitalize;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));

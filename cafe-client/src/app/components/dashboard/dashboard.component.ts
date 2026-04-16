@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -11,24 +11,58 @@ import { PricePipe } from '../../pipes/price.pipe';
   standalone: true,
   imports: [CommonModule, PricePipe],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
+  styleUrl: './dashboard.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   currentUser: any;
   todayRevenue = 0;
   todayOrders = 0;
   pendingOrders = 0;
   isLoading = true;
+  currentTime = '';
+  currentDate = '';
+  private timeInterval: any;
 
   constructor(
     private authService: AuthService,
     private orderService: OrderService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.currentUser = this.authService.currentUser;
     this.loadDashboardData();
+    this.startClock();
+  }
+
+  private startClock(): void {
+    this.updateTime();
+    this.timeInterval = setInterval(() => {
+      this.updateTime();
+      this.cdr.markForCheck();
+    }, 1000);
+  }
+
+  private updateTime(): void {
+    const now = new Date();
+    this.currentTime = now.toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
+    const day = now.getDate();
+    const monthNames = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+                       'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    const weekdayNames = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
+
+    const month = monthNames[now.getMonth()];
+    const weekday = weekdayNames[now.getDay()];
+    const year = now.getFullYear();
+
+    this.currentDate = `${day} ${month}, ${weekday} ${year}`;
   }
 
   loadDashboardData(): void {
@@ -75,5 +109,9 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-
+  ngOnDestroy(): void {
+    if (this.timeInterval) {
+      clearInterval(this.timeInterval);
+    }
+  }
 }

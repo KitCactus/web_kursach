@@ -30,11 +30,9 @@ public class MenuController {
                 return ResponseEntity.badRequest().body("Файл пустой");
             }
             String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "photo";
-            // Убираем небезопасные символы из имени файла
             String safeName = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
             String filename = UUID.randomUUID() + "_" + safeName;
 
-            // Используем абсолютный путь от рабочей директории
             Path uploadDir = Paths.get(System.getProperty("user.dir"), "uploads");
             Files.createDirectories(uploadDir);
             Files.copy(file.getInputStream(), uploadDir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);

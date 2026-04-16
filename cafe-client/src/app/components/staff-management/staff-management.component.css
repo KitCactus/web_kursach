@@ -231,6 +231,7 @@ header.staff-header h1 {
   box-shadow: 0 4px 16px rgba(184, 169, 212, 0.1);
   border: 1px solid rgba(184, 169, 212, 0.2);
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .staff-card:hover {
@@ -238,9 +239,17 @@ header.staff-header h1 {
   box-shadow: 0 6px 20px rgba(184, 169, 212, 0.15);
 }
 
-.staff-card.inactive {
-  opacity: 0.7;
-  border-color: rgba(212, 160, 48, 0.3);
+.you-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #B8A9D4;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
 .staff-header {

@@ -72,6 +72,41 @@
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>backend-only</id>
+			<activation>
+				<property>
+					<name>backend</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<!-- Отключаем фронтенд плагин для чистых Java тестов -->
+					<plugin>
+						<groupId>com.github.eirslett</groupId>
+						<artifactId>frontend-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>install-node-and-npm</id>
+								<phase>none</phase>
+							</execution>
+							<execution>
+								<id>npm-install</id>
+								<phase>none</phase>
+							</execution>
+							<execution>
+								<id>npm-build</id>
+								<phase>none</phase>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 	<build>
 		<plugins>
 			<plugin>
