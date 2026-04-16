@@ -74,8 +74,14 @@ public class UserService {
         if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
             throw new RuntimeException("Username already exists");
         }
-        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
+        if (userDto.getEmail() != null && !userDto.getEmail().isBlank() && userRepository.findByEmail(userDto.getEmail()).isPresent()) {
             throw new RuntimeException("Email already exists");
+        }
+        if (userDto.getPhone() == null || userDto.getPhone().isBlank()) {
+            throw new RuntimeException("Phone is required");
+        }
+        if (!userDto.getPhone().matches("\\d+")) {
+            throw new RuntimeException("Phone must contain only digits");
         }
 
         String rawPassword = (userDto.getPassword() != null && !userDto.getPassword().isBlank())
@@ -83,9 +89,9 @@ public class UserService {
         User user = new User(
                 userDto.getUsername(),
                 passwordEncoder.encode(rawPassword),
-                userDto.getEmail() != null ? userDto.getEmail() : userDto.getUsername() + "@cafe.ru",
+                userDto.getEmail() != null && !userDto.getEmail().isBlank() ? userDto.getEmail() : null,
                 userDto.getFullName() != null ? userDto.getFullName() : userDto.getUsername(),
-                userDto.getPhone() != null ? userDto.getPhone() : ""
+                userDto.getPhone()
         );
 
         Role role = roleRepository.findByName(roleName)
@@ -101,9 +107,14 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        user.setFullName(userDto.getFullName());
-        user.setEmail(userDto.getEmail());
-        user.setPhone(userDto.getPhone());
+        if (userDto.getFullName() != null) user.setFullName(userDto.getFullName());
+        if (userDto.getEmail() != null) user.setEmail(userDto.getEmail());
+        if (userDto.getPhone() != null) {
+            if (!userDto.getPhone().matches("\\d+")) {
+                throw new RuntimeException("Phone must contain only digits");
+            }
+            user.setPhone(userDto.getPhone());
+        }
 
         User updatedUser = userRepository.save(user);
         return convertToDto(updatedUser);
@@ -151,6 +162,14 @@ public class UserService {
         if (userDto.getEmail() != null) user.setEmail(userDto.getEmail());
         if (userDto.getPhone() != null) user.setPhone(userDto.getPhone());
         return convertToDto(userRepository.save(user));
+    }
+
+    @Transactional
+    public void updateActiveStatus(Long id, boolean active) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        user.setIsActive(active);
+        userRepository.save(user);
     }
 
     /**

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -22,10 +22,12 @@ export class OrdersComponent implements OnInit {
   statuses: OrderStatus[] = ['PENDING', 'IN_PROGRESS', 'PAID', 'COMPLETED', 'CANCELLED'];
   isLoading = false;
   todayRevenue = 0;
+  errorMessage: string | null = null;
 
   constructor(
     private orderService: OrderService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -35,6 +37,7 @@ export class OrdersComponent implements OnInit {
 
   loadOrders(): void {
     this.isLoading = true;
+    this.errorMessage = null;
     this.orderService.getAllOrders()
       .subscribe({
         next: (orders) => {
@@ -45,10 +48,13 @@ export class OrdersComponent implements OnInit {
           });
           this.filteredOrders = this.orders;
           this.isLoading = false;
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('Error loading orders:', error);
+          this.errorMessage = 'Не удалось загрузить заказы. Проверьте подключение к серверу.';
           this.isLoading = false;
+          this.cdr.detectChanges();
         }
       });
   }
@@ -58,9 +64,11 @@ export class OrdersComponent implements OnInit {
       .subscribe({
         next: (revenue) => {
           this.todayRevenue = revenue || 0;
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('Error loading revenue:', error);
+          this.cdr.detectChanges();
         }
       });
   }
@@ -77,15 +85,17 @@ export class OrdersComponent implements OnInit {
   }
 
   updateOrderStatus(order: Order, newStatus: OrderStatus): void {
+    const oldStatus = order.status;
+    order.status = newStatus;
+
     const statusUpdate: OrderStatusUpdate = { status: newStatus };
-    
     this.orderService.updateOrderStatus(order.id, statusUpdate)
       .subscribe({
-        next: () => {
-          order.status = newStatus;
-        },
+        next: () => {},
         error: (error) => {
+          order.status = oldStatus;
           console.error('Error updating order status:', error);
+          this.errorMessage = 'Не удалось изменить статус заказа. Попробуйте снова.';
         }
       });
   }

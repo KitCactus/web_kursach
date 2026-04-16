@@ -13,6 +13,12 @@
   </header>
 
   <div class="orders-content">
+    @if (errorMessage) {
+      <div class="error-banner" (click)="errorMessage = null">
+        ⚠️ {{ errorMessage }} <span class="error-close">×</span>
+      </div>
+    }
+
     <div class="filters-section">
       <div class="search-box">
         <input

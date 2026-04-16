@@ -18,7 +18,7 @@
         <div class="stat-icon revenue-icon">💰</div>
         <div class="stat-content">
           <h3>Выручка сегодня</h3>
-          <p class="stat-value">{{ todayRevenue | currency:'RUB' }}</p>
+          <p class="stat-value">{{ todayRevenue | price }}</p>
         </div>
       </div>
 
@@ -57,12 +57,6 @@
           <div class="nav-icon">👥</div>
           <h3>Персонал</h3>
           <p>Управление сотрудниками</p>
-        </button>
-
-        <button class="nav-card" (click)="navigateToSchedule()">
-          <div class="nav-icon">📅</div>
-          <h3>График работы</h3>
-          <p>Расписание и ЗП</p>
         </button>
 
         <button class="nav-card" (click)="navigateToReports()">

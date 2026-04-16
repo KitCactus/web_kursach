@@ -52,4 +52,16 @@ export class MenuService {
       responseType: 'text'
     });
   }
+
+  getCategories(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.API_URL}/categories/all`);
+  }
+
+  getSubcategories(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.API_URL}/subcategories/all`);
+  }
+
+  getSubcategoriesByCategory(category: string): Observable<string[]> {
+    return this.http.get<string[]>(`${this.API_URL}/subcategories/by-category?category=${category}`);
+  }
 }

@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService, AuthRequest } from '../../services';
 
 @Component({
@@ -24,7 +25,8 @@ export class LoginComponent {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   onSubmit(): void {
@@ -47,12 +49,22 @@ export class LoginComponent {
     this.authService.login(this.credentials.username, this.credentials.password)
       .subscribe({
         next: () => {
+          console.log('✓ Login успешен, редирект на /dashboard');
           this.isLoading = false;
           this.router.navigate(['/dashboard']);
         },
-        error: () => {
-          this.errorMessage = 'Неверный логин или пароль';
+        error: (err: HttpErrorResponse) => {
+          console.log('✗ Login ошибка:', err.status, err.message, err);
           this.isLoading = false;
+          if (err.status === 0) {
+            this.errorMessage = 'Сервер недоступен. Проверьте подключение.';
+          } else if (err.status === 401 || err.status === 403) {
+            this.errorMessage = 'Неверный логин или пароль';
+          } else {
+            this.errorMessage = 'Ошибка при входе. Попробуйте снова.';
+          }
+          this.cdr.detectChanges();
+          console.log('📢 Ошибка показана:', this.errorMessage);
         }
       });
   }

@@ -13,6 +13,12 @@
   </header>
 
   <div class="menu-content">
+    @if (errorMessage) {
+      <div class="error-banner" (click)="errorMessage = null">
+        ⚠️ {{ errorMessage }} <span class="error-close">×</span>
+      </div>
+    }
+
     <div class="filters-section">
       <div class="search-box">
         <input
@@ -26,12 +32,23 @@
 
       <select
         [(ngModel)]="selectedCategory"
-        (change)="filterItems()"
+        (change)="onCategoryChange()"
         class="category-filter"
       >
         <option value="">Все категории</option>
         @for (category of categories; track category) {
-          <option [value]="category">{{ getCategoryDisplayName(category) }}</option>
+          <option [value]="category">{{ category }}</option>
+        }
+      </select>
+
+      <select
+        [(ngModel)]="selectedSubcategory"
+        (change)="filterItems()"
+        class="category-filter"
+      >
+        <option value="">Все подкатегории</option>
+        @for (subcategory of filteredSubcategories; track subcategory) {
+          <option [value]="subcategory">{{ subcategory }}</option>
         }
       </select>
     </div>
@@ -54,13 +71,13 @@
             <div class="item-content">
               <div class="item-header">
                 <h3>{{ item.name }}</h3>
-                <span class="item-category">{{ getCategoryDisplayName(item.category) }}</span>
+                <span class="item-category">{{ item.category }}</span>
               </div>
 
               <p class="item-description">{{ item.description }}</p>
 
               <div class="item-footer">
-                <span class="item-price">{{ item.price | currency:'RUB' }}</span>
+                <span class="item-price">{{ item.price | price }}</span>
                 <div class="item-actions">
                   @if (isAdmin) {
                     <button class="action-button edit" (click)="openEditModal(item)" title="Редактировать">✏️</button>
@@ -105,8 +122,8 @@
 
 <!-- Create Modal -->
 @if (isCreateModalOpen) {
-  <div class="modal-overlay" (click)="closeCreateModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
+  <div class="modal-overlay">
+    <div class="modal-content">
       <div class="modal-header">
         <h2>Добавить блюдо</h2>
         <button class="close-button" (click)="closeCreateModal()">×</button>
@@ -133,23 +150,30 @@
 
           <div class="form-group">
             <label>Категория <span class="required">*</span></label>
-            <select [(ngModel)]="newItem.category">
+            <input type="text" [(ngModel)]="newItem.category" list="categories-list" placeholder="Выберите или введите категорию" />
+            <datalist id="categories-list">
               @for (category of categories; track category) {
-                <option [value]="category">{{ getCategoryDisplayName(category) }}</option>
+                <option [value]="category">{{ category }}</option>
               }
-            </select>
+            </datalist>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Подкатегория</label>
-          <input type="text" [(ngModel)]="newItem.subcategory" placeholder="Например: Латте, Эспрессо (необязательно)" />
+          <label>Подкатегория <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="newItem.subcategory" [class.input-error]="createErrors.subcategory" list="subcategories-list" placeholder="Выберите или введите подкатегорию" />
+          @if (createErrors.subcategory) { <span class="field-error">{{ createErrors.subcategory }}</span> }
+          <datalist id="subcategories-list">
+            @for (subcategory of subcategories; track subcategory) {
+              <option [value]="subcategory">{{ subcategory }}</option>
+            }
+          </datalist>
         </div>
 
         <div class="form-group">
           <label>Фото блюда</label>
           @if (newItem.photoFileId) {
-            <img [src]="newItem.photoFileId" style="width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
+            <img [src]="newItem.photoFileId" style="width:100%;height:300px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
           }
           <input type="file" accept="image/*" (change)="onPhotoSelected($event, false)" />
           @if (isUploadingPhoto) {
@@ -168,8 +192,8 @@
 
 <!-- Edit Modal -->
 @if (isEditModalOpen && selectedItem) {
-  <div class="modal-overlay" (click)="closeEditModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
+  <div class="modal-overlay">
+    <div class="modal-content">
       <div class="modal-header">
         <h2>Редактировать блюдо</h2>
         <button class="close-button" (click)="closeEditModal()">×</button>
@@ -196,23 +220,30 @@
 
           <div class="form-group">
             <label>Категория <span class="required">*</span></label>
-            <select [(ngModel)]="selectedItem.category">
+            <input type="text" [(ngModel)]="selectedItem.category" list="categories-list-edit" placeholder="Выберите или введите категорию" />
+            <datalist id="categories-list-edit">
               @for (category of categories; track category) {
-                <option [value]="category">{{ getCategoryDisplayName(category) }}</option>
+                <option [value]="category">{{ category }}</option>
               }
-            </select>
+            </datalist>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Подкатегория</label>
-          <input type="text" [(ngModel)]="selectedItem.subcategory" placeholder="Например: Латте, Эспрессо (необязательно)" />
+          <label>Подкатегория <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="selectedItem.subcategory" [class.input-error]="editErrors.subcategory" list="subcategories-list-edit" placeholder="Выберите или введите подкатегорию" />
+          @if (editErrors.subcategory) { <span class="field-error">{{ editErrors.subcategory }}</span> }
+          <datalist id="subcategories-list-edit">
+            @for (subcategory of subcategories; track subcategory) {
+              <option [value]="subcategory">{{ subcategory }}</option>
+            }
+          </datalist>
         </div>
 
         <div class="form-group">
           <label>Фото блюда</label>
           @if (selectedItem.photoFileId) {
-            <img [src]="selectedItem.photoFileId" style="width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
+            <img [src]="selectedItem.photoFileId" style="width:100%;height:300px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
           }
           <input type="file" accept="image/*" (change)="onPhotoSelected($event, true)" />
           @if (isUploadingPhoto) {

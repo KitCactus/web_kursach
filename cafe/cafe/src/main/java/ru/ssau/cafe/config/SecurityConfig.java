@@ -53,6 +53,9 @@ public class SecurityConfig {
                         // ========== ПУБЛИЧНЫЕ ЭНДПОИНТЫ (не требуют авторизации) ==========
                         // Для бота (доступно всем)
                         .requestMatchers("/menu/bot").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/menu/categories/all").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/menu/subcategories/all").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/menu/subcategories/by-category").permitAll()
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         // Для Telegram бота (вебхуки)
@@ -81,6 +84,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/users/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/users").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/users/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/users/*/active").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/users/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/users/*").hasRole("ADMIN")
                         // Скрытие товаров

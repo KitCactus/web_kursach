@@ -49,19 +49,22 @@ export class AuthService {
   login(username: string, password: string): Observable<User> {
     return this.http.post<AuthResponse>(`${this.API_URL}/login`, { username, password }).pipe(
       map(response => {
-        // Маппинг плоского ответа бэкенда в объект User
         const user: User = {
           id: response.id,
           username: response.username,
           fullName: response.fullName,
           role: response.role,
-          password: password  // сохраняем для Basic Auth заголовков
+          password: password
         };
         return user;
       }),
       tap(user => {
         localStorage.setItem('authToken', btoa(`${username}:${password}`));
         this.setCurrentUser(user);
+        // Помечаем пользователя активным
+        this.http.patch(`${environment.apiUrl}/users/${user.id}/active?active=true`, {},
+          { headers: { 'Authorization': `Basic ${btoa(`${username}:${password}`)}`, 'Content-Type': 'application/json' } }
+        ).subscribe({ error: () => {} });
       })
     );
   }
@@ -71,6 +74,14 @@ export class AuthService {
   }
 
   logout(): void {
+    const user = this.currentUser;
+    const token = localStorage.getItem('authToken');
+    if (user && token) {
+      // Помечаем пользователя неактивным перед выходом
+      this.http.patch(`${environment.apiUrl}/users/${user.id}/active?active=false`, {},
+        { headers: { 'Authorization': `Basic ${token}`, 'Content-Type': 'application/json' } }
+      ).subscribe({ error: () => {} });
+    }
     localStorage.removeItem('currentUser');
     localStorage.removeItem('authToken');
     this.currentUserSubject.next(null);

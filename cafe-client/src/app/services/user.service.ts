@@ -59,6 +59,9 @@ export class UserService {
   }
 
   updateUserRole(id: number, role: 'ADMIN' | 'USER'): Observable<void> {
+    if (!role || !['ADMIN', 'USER'].includes(role)) {
+      throw new Error(`Invalid role: ${role}`);
+    }
     return this.http.patch<void>(`${this.API_URL}/${id}/role?role=${role}`, {});
   }
 

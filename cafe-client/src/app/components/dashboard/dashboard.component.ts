@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { OrderService } from '../../services/order.service';
+import { PricePipe } from '../../pipes/price.pipe';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PricePipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -74,10 +75,5 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  navigateToSchedule(): void {
-    if (this.authService.isAdmin) {
-      this.router.navigate(['/admin/schedule']);
-    }
-  }
 
 }

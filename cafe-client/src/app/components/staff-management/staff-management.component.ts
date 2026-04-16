@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -23,7 +23,7 @@ export class StaffManagementComponent implements OnInit {
   isCreateModalOpen = false;
   isEditModalOpen = false;
   selectedUser: User | null = null;
-  createErrors: { username?: string; password?: string; firstName?: string } = {};
+  createErrors: { username?: string; password?: string; firstName?: string; phone?: string } = {};
 
   newUser = {
     username: '',
@@ -43,7 +43,8 @@ export class StaffManagementComponent implements OnInit {
   constructor(
     private userService: UserService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -62,10 +63,12 @@ export class StaffManagementComponent implements OnInit {
           this.users = users;
           this.filteredUsers = users;
           this.isLoading = false;
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('Error loading users:', error);
           this.isLoading = false;
+          this.cdr.detectChanges();
         }
       });
   }
@@ -113,14 +116,25 @@ export class StaffManagementComponent implements OnInit {
     if (!this.newUser.username?.trim()) this.createErrors.username = 'Введите логин';
     if (!this.newUser.password) this.createErrors.password = 'Введите пароль';
     if (!this.newUser.firstName?.trim()) this.createErrors.firstName = 'Введите имя';
-    if (this.createErrors.username || this.createErrors.password || this.createErrors.firstName) return;
+    if (!this.newUser.phone?.trim()) this.createErrors.phone = 'Введите номер телефона';
+    else if (!/^\d+$/.test(this.newUser.phone.replace(/[\s\-()]/g, ''))) this.createErrors.phone = 'Телефон должен содержать только цифры';
+
+    if (this.createErrors.username || this.createErrors.password || this.createErrors.firstName || this.createErrors.phone) return;
 
     const userData = { ...this.newUser };
     this.closeCreateModal();
     this.userService.createUser(userData, userData.role)
       .subscribe({
-        next: () => { this.loadUsers(); },
-        error: (error) => { console.error('Error creating user:', error); }
+        next: (created) => {
+          this.users.push(created);
+          this.filterUsers();
+          this.newUser = { username: '', password: '', firstName: '', lastName: '', email: '', phone: '', role: 'USER', isActive: true };
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error creating user:', error);
+          this.cdr.detectChanges();
+        }
       });
   }
 
@@ -129,40 +143,48 @@ export class StaffManagementComponent implements OnInit {
 
     const { password, ...userWithoutPassword } = this.selectedUser;
     const userData = { ...userWithoutPassword };
+    const oldUser = this.users.find(u => u.id === userData.id);
     this.closeEditModal();
+
+    // Сразу обновляем в списке
+    const idx = this.users.findIndex(u => u.id === userData.id);
+    if (idx >= 0) {
+      this.users[idx] = userData;
+      this.filterUsers();
+    }
+
     this.userService.updateUser(userData.id, userData)
       .subscribe({
-        next: () => { this.loadUsers(); },
-        error: (error) => { console.error('Error updating user:', error); }
+        next: () => { /* уже обновили выше */ },
+        error: (error) => {
+          // Откатываем
+          if (idx >= 0 && oldUser) {
+            this.users[idx] = oldUser;
+            this.filterUsers();
+          }
+          console.error('Error updating user:', error);
+        }
       });
   }
 
   deleteUser(user: User): void {
     if (confirm(`Вы уверены, что хотите удалить "${user.fullName || user.username}"?`)) {
+      // Сразу удаляем из списка
+      const oldUsers = this.users;
+      this.users = this.users.filter(u => u.id !== user.id);
+      this.filterUsers();
+      // Отправляем запрос
       this.userService.deleteUser(user.id)
         .subscribe({
-          next: () => {
-            this.loadUsers();
-          },
+          next: () => { /* уже удалили выше */ },
           error: (error) => {
+            // Откатываем
+            this.users = oldUsers;
+            this.filterUsers();
             console.error('Error deleting user:', error);
           }
         });
     }
-  }
-
-  toggleUserRole(user: User): void {
-    const newRole = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
-    this.userService.updateUserRole(user.id, newRole)
-      .subscribe({
-        next: () => {
-          // Перезагружаем весь список чтобы получить актуальные данные из БД
-          this.loadUsers();
-        },
-        error: (error) => {
-          console.error('Error updating user role:', error);
-        }
-      });
   }
 
   resetPassword(user: User): void {

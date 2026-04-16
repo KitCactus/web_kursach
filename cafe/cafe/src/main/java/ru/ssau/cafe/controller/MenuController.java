@@ -113,4 +113,19 @@ public class MenuController {
         menuService.deleteMenuItem(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/categories/all")
+    public ResponseEntity<List<String>> getAllCategories() {
+        return ResponseEntity.ok(menuService.getAllCategories());
+    }
+
+    @GetMapping("/subcategories/all")
+    public ResponseEntity<List<String>> getAllSubcategories() {
+        return ResponseEntity.ok(menuService.getAllSubcategories());
+    }
+
+    @GetMapping("/subcategories/by-category")
+    public ResponseEntity<List<String>> getSubcategoriesByCategory(@RequestParam String category) {
+        return ResponseEntity.ok(menuService.getSubcategoriesByCategory(category));
+    }
 }

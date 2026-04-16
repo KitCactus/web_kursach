@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -142,5 +143,35 @@ public class MenuService {
         MenuItem item = menuItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with id: " + id));
         menuItemRepository.delete(item);
+    }
+
+    // Получить все уникальные категории
+    public List<String> getAllCategories() {
+        return menuItemRepository.findAll().stream()
+                .map(MenuItem::getCategory)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    // Получить все уникальные подкатегории
+    public List<String> getAllSubcategories() {
+        return menuItemRepository.findAll().stream()
+                .map(MenuItem::getSubcategory)
+                .filter(s -> s != null && !s.isBlank())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    // Получить подкатегории для конкретной категории
+    public List<String> getSubcategoriesByCategory(String category) {
+        return menuItemRepository.findAll().stream()
+                .filter(item -> category.equals(item.getCategory()))
+                .map(MenuItem::getSubcategory)
+                .filter(s -> s != null && !s.isBlank())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
     }
 }

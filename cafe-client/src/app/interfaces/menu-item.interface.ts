@@ -3,7 +3,7 @@ export interface MenuItem {
   name: string;
   description: string;
   price: number;
-  category: 'COFFEE' | 'TEA' | 'DESSERT' | 'SANDWICH' | 'SNACK' | 'OTHER';
+  category: string;
   photoFileId?: string;
   isAvailable: boolean;
   isHidden: boolean;
@@ -16,7 +16,7 @@ export interface CreateMenuItemRequest {
   name: string;
   description: string;
   price: number;
-  category: MenuItem['category'];
+  category: string;
   photoFileId?: string;
   subcategory?: string;
 }
