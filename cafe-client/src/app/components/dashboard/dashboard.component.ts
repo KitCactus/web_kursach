@@ -80,7 +80,4 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  navigateToProfile(): void {
-    this.router.navigate(['/profile']);
-  }
 }

@@ -6,7 +6,6 @@ import { OrdersComponent } from './components/orders/orders.component';
 import { StaffManagementComponent } from './components/staff-management/staff-management.component';
 import { ScheduleComponent } from './components/schedule/schedule.component';
 import { ReportsComponent } from './components/reports/reports.component';
-import { ProfileComponent } from './components/profile/profile.component';
 import { AuthGuard } from './guards/auth.guard';
 import { AdminGuard } from './guards/admin.guard';
 
@@ -15,7 +14,6 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
   { path: 'menu', component: MenuComponent, canActivate: [AuthGuard] },
   { path: 'orders', component: OrdersComponent, canActivate: [AuthGuard] },
-  { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
   // Только для админа:
   { path: 'admin/staff', component: StaffManagementComponent, canActivate: [AuthGuard, AdminGuard] },
   { path: 'admin/schedule', component: ScheduleComponent, canActivate: [AuthGuard, AdminGuard] },

@@ -60,14 +60,16 @@ public class SecurityConfig {
 
                         // ========== ЭНДПОИНТЫ ДЛЯ СОТРУДНИКОВ И АДМИНОВ ==========
                         // Меню (просмотр, редактирование, добавление)
-                        .requestMatchers(HttpMethod.GET, "/menu").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.GET, "/menu/**").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.POST, "/menu").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.PUT, "/menu/**").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.PATCH, "/menu/*/availability").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers(HttpMethod.GET, "/menu").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET, "/menu/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.POST, "/menu").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.PUT, "/menu/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.PATCH, "/menu/*/availability").hasAnyRole("ADMIN", "USER")
+                        // Загрузка фото
+                        .requestMatchers(HttpMethod.POST, "/menu/upload").hasAnyRole("ADMIN", "USER")
                         // Заказы (просмотр, изменение статуса)
-                        .requestMatchers(HttpMethod.GET, "/orders/**").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.PATCH, "/orders/*/status").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers(HttpMethod.GET, "/orders/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.PATCH, "/orders/*/status").hasAnyRole("ADMIN", "USER")
 
                         // ========== ПРОФИЛЬ (доступен любому авторизованному) ==========
                         .requestMatchers(HttpMethod.GET, "/users/me").authenticated()

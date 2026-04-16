@@ -52,12 +52,6 @@
         <p>Обработка заказов</p>
       </button>
 
-      <button class="nav-card" (click)="navigateToProfile()">
-        <div class="nav-icon">👤</div>
-        <h3>Профиль</h3>
-        <p>Мои данные и пароль</p>
-      </button>
-
       @if (currentUser?.role === 'ADMIN') {
         <button class="nav-card" (click)="navigateToStaff()">
           <div class="nav-icon">👥</div>

@@ -115,15 +115,12 @@ export class StaffManagementComponent implements OnInit {
     if (!this.newUser.firstName?.trim()) this.createErrors.firstName = 'Введите имя';
     if (this.createErrors.username || this.createErrors.password || this.createErrors.firstName) return;
 
-    this.userService.createUser(this.newUser, this.newUser.role)
+    const userData = { ...this.newUser };
+    this.closeCreateModal();
+    this.userService.createUser(userData, userData.role)
       .subscribe({
-        next: () => {
-          this.loadUsers();
-          this.closeCreateModal();
-        },
-        error: (error) => {
-          console.error('Error creating user:', error);
-        }
+        next: () => { this.loadUsers(); },
+        error: (error) => { console.error('Error creating user:', error); }
       });
   }
 
@@ -131,15 +128,12 @@ export class StaffManagementComponent implements OnInit {
     if (!this.selectedUser) return;
 
     const { password, ...userWithoutPassword } = this.selectedUser;
-    this.userService.updateUser(this.selectedUser.id, userWithoutPassword)
+    const userData = { ...userWithoutPassword };
+    this.closeEditModal();
+    this.userService.updateUser(userData.id, userData)
       .subscribe({
-        next: () => {
-          this.loadUsers();
-          this.closeEditModal();
-        },
-        error: (error) => {
-          console.error('Error updating user:', error);
-        }
+        next: () => { this.loadUsers(); },
+        error: (error) => { console.error('Error updating user:', error); }
       });
   }
 
@@ -162,7 +156,8 @@ export class StaffManagementComponent implements OnInit {
     this.userService.updateUserRole(user.id, newRole)
       .subscribe({
         next: () => {
-          user.role = newRole;
+          // Перезагружаем весь список чтобы получить актуальные данные из БД
+          this.loadUsers();
         },
         error: (error) => {
           console.error('Error updating user role:', error);

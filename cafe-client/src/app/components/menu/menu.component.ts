@@ -106,8 +106,10 @@ export class MenuComponent implements OnInit {
     if (this.createErrors.name || this.createErrors.price) return;
 
     const userId = this.authService.currentUser?.id ?? 1;
+    // Закрываем модалку ДО запроса, чтобы не было двойного нажатия
+    this.closeCreateModal();
     this.menuService.createMenuItem(this.newItem, userId).subscribe({
-      next: () => { this.loadMenuItems(); this.closeCreateModal(); },
+      next: () => { this.loadMenuItems(); },
       error: (error) => console.error('Error creating menu item:', error)
     });
   }
@@ -119,8 +121,11 @@ export class MenuComponent implements OnInit {
     if (!this.selectedItem.price || this.selectedItem.price <= 0) this.editErrors.price = 'Цена должна быть больше 0';
     if (this.editErrors.name || this.editErrors.price) return;
 
-    this.menuService.updateMenuItem(this.selectedItem.id, this.selectedItem).subscribe({
-      next: () => { this.loadMenuItems(); this.closeEditModal(); },
+    const item = { ...this.selectedItem };
+    // Закрываем модалку ДО запроса
+    this.closeEditModal();
+    this.menuService.updateMenuItem(item.id, item).subscribe({
+      next: () => { this.loadMenuItems(); },
       error: (error) => console.error('Error updating menu item:', error)
     });
   }

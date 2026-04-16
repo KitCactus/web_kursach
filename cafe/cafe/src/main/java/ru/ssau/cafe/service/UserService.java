@@ -78,12 +78,14 @@ public class UserService {
             throw new RuntimeException("Email already exists");
         }
 
+        String rawPassword = (userDto.getPassword() != null && !userDto.getPassword().isBlank())
+                ? userDto.getPassword() : "default123";
         User user = new User(
                 userDto.getUsername(),
-                passwordEncoder.encode("default123"),
-                userDto.getEmail(),
-                userDto.getFullName(),
-                userDto.getPhone()
+                passwordEncoder.encode(rawPassword),
+                userDto.getEmail() != null ? userDto.getEmail() : userDto.getUsername() + "@cafe.ru",
+                userDto.getFullName() != null ? userDto.getFullName() : userDto.getUsername(),
+                userDto.getPhone() != null ? userDto.getPhone() : ""
         );
 
         Role role = roleRepository.findByName(roleName)
@@ -123,8 +125,10 @@ public class UserService {
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        user.setIsActive(false);
+        // Очищаем связи перед удалением, иначе PostgreSQL упадёт на FK
+        user.getRoles().clear();
         userRepository.save(user);
+        userRepository.deleteById(id);
     }
 
     @Transactional
