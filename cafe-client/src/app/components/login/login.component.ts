@@ -29,18 +29,31 @@ export class LoginComponent {
     private cdr: ChangeDetectorRef
   ) {}
 
+  validateForm(): boolean {
+    this.fieldErrors = {};
+
+    if (!this.credentials.username?.trim()) {
+      this.fieldErrors.username = 'Введите логин';
+    } else if (this.credentials.username.length < 3) {
+      this.fieldErrors.username = 'Логин должен быть минимум 3 символа';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(this.credentials.username)) {
+      this.fieldErrors.username = 'Логин может содержать только буквы, цифры и подчёркивание';
+    }
+
+    if (!this.credentials.password?.trim()) {
+      this.fieldErrors.password = 'Введите пароль';
+    } else if (this.credentials.password.length < 4) {
+      this.fieldErrors.password = 'Пароль должен быть минимум 4 символа';
+    }
+
+    return !this.fieldErrors.username && !this.fieldErrors.password;
+  }
+
   onSubmit(): void {
     this.submitted = true;
-    this.fieldErrors = {};
     this.errorMessage = '';
 
-    if (!this.credentials.username) {
-      this.fieldErrors.username = 'Введите логин';
-    }
-    if (!this.credentials.password) {
-      this.fieldErrors.password = 'Введите пароль';
-    }
-    if (this.fieldErrors.username || this.fieldErrors.password) {
+    if (!this.validateForm()) {
       return;
     }
 

@@ -45,10 +45,14 @@ public class MenuController {
     }
 
     @DeleteMapping("/upload/{filename}")
-    public ResponseEntity<Void> deletePhoto(@PathVariable String filename) throws IOException {
-        Path file = Paths.get(System.getProperty("user.dir"), "uploads").resolve(filename);
-        Files.deleteIfExists(file);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> deletePhoto(@PathVariable String filename) {
+        try {
+            Path file = Paths.get(System.getProperty("user.dir"), "uploads").resolve(filename);
+            Files.deleteIfExists(file);
+            return ResponseEntity.noContent().build();
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
     @Autowired
     public MenuController(MenuService menuService) {

@@ -8,12 +8,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Arrays;
 
 @RestController
 @RequestMapping("/orders")
 public class OrderController {
 
     private final OrderService orderService;
+    private static final List<String> VALID_STATUSES = Arrays.asList(
+            "PENDING", "IN_PROGRESS", "PAID", "COMPLETED", "CANCELLED"
+    );
 
     @Autowired
     public OrderController(OrderService orderService) {
@@ -54,6 +58,9 @@ public class OrderController {
     public ResponseEntity<OrderDto> updateOrderStatus(
             @PathVariable Long id,
             @RequestParam String status) {
+        if (!VALID_STATUSES.contains(status)) {
+            throw new IllegalArgumentException("Invalid order status: " + status + ". Valid statuses: " + VALID_STATUSES);
+        }
         return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
     }
 }

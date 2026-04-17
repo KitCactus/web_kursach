@@ -53,8 +53,7 @@ export class AuthService {
           id: response.id,
           username: response.username,
           fullName: response.fullName,
-          role: response.role,
-          password: password
+          role: response.role
         };
         return user;
       }),
@@ -93,19 +92,31 @@ export class AuthService {
   }
 
   createAuthHeaders(username: string, password?: string): HttpHeaders {
-    const pwd = password || this.currentUser?.password || '';
-    const encodedAuth = btoa(`${username}:${pwd}`);
+    if (password) {
+      const encodedAuth = btoa(`${username}:${password}`);
+      return new HttpHeaders({
+        'Authorization': `Basic ${encodedAuth}`,
+        'Content-Type': 'application/json'
+      });
+    }
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
     return new HttpHeaders({
-      'Authorization': `Basic ${encodedAuth}`,
+      'Authorization': `Basic ${token}`,
       'Content-Type': 'application/json'
     });
   }
 
   getAuthHeaders(): HttpHeaders {
-    const currentUser = this.currentUser;
-    if (!currentUser) {
-      throw new Error('No authenticated user found');
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      throw new Error('No authentication token found');
     }
-    return this.createAuthHeaders(currentUser.username, currentUser.password);
+    return new HttpHeaders({
+      'Authorization': `Basic ${token}`,
+      'Content-Type': 'application/json'
+    });
   }
 }

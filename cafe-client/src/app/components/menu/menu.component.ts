@@ -144,10 +144,21 @@ export class MenuComponent implements OnInit {
 
   createItem(): void {
     this.createErrors = {};
-    if (!this.newItem.name?.trim()) this.createErrors.name = 'Введите название блюда';
-    if (!this.newItem.price || this.newItem.price <= 0) this.createErrors.price = 'Цена должна быть больше 0';
+    if (!this.newItem.name?.trim()) {
+      this.createErrors.name = 'Введите название блюда';
+    } else if (this.newItem.name.length < 2) {
+      this.createErrors.name = 'Название должно быть минимум 2 символа';
+    }
+    if (this.newItem.description && this.newItem.description.length > 500) {
+      this.createErrors.description = 'Описание не должно превышать 500 символов';
+    }
+    if (!this.newItem.price || this.newItem.price <= 0) {
+      this.createErrors.price = 'Цена должна быть больше 0';
+    } else if (this.newItem.price > 100000) {
+      this.createErrors.price = 'Цена не должна превышать 100000 рублей';
+    }
     if (!this.newItem.subcategory?.trim()) this.createErrors.subcategory = 'Выберите подкатегорию';
-    if (this.createErrors.name || this.createErrors.price || this.createErrors.subcategory) return;
+    if (this.createErrors.name || this.createErrors.price || this.createErrors.subcategory || this.createErrors.description) return;
 
     const userId = this.authService.currentUser?.id ?? 1;
     this.closeCreateModal();
@@ -169,10 +180,21 @@ export class MenuComponent implements OnInit {
   updateItem(): void {
     if (!this.selectedItem) return;
     this.editErrors = {};
-    if (!this.selectedItem.name?.trim()) this.editErrors.name = 'Введите название блюда';
-    if (!this.selectedItem.price || this.selectedItem.price <= 0) this.editErrors.price = 'Цена должна быть больше 0';
+    if (!this.selectedItem.name?.trim()) {
+      this.editErrors.name = 'Введите название блюда';
+    } else if (this.selectedItem.name.length < 2) {
+      this.editErrors.name = 'Название должно быть минимум 2 символа';
+    }
+    if (this.selectedItem.description && this.selectedItem.description.length > 500) {
+      this.editErrors.description = 'Описание не должно превышать 500 символов';
+    }
+    if (!this.selectedItem.price || this.selectedItem.price <= 0) {
+      this.editErrors.price = 'Цена должна быть больше 0';
+    } else if (this.selectedItem.price > 100000) {
+      this.editErrors.price = 'Цена не должна превышать 100000 рублей';
+    }
     if (!this.selectedItem.subcategory?.trim()) this.editErrors.subcategory = 'Выберите подкатегорию';
-    if (this.editErrors.name || this.editErrors.price || this.editErrors.subcategory) return;
+    if (this.editErrors.name || this.editErrors.price || this.editErrors.subcategory || this.editErrors.description) return;
 
     const item = { ...this.selectedItem };
     const oldItem = this.menuItems.find(i => i.id === item.id);
