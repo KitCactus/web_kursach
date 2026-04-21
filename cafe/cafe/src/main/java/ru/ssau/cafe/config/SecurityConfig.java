@@ -14,12 +14,15 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.http.HttpMethod;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final UserDetailsService userDetailsService;
 
@@ -50,11 +53,13 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        logger.info("SecurityConfig: Configuring security filter chain");
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // SPA (главная страница и статические файлы)
+                        // Статические ресурсы (фотки, стили, скрипты) - доступно всем БЕЗ аутентификации
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/", "/index.html").permitAll()
                         .requestMatchers("/assets/**", "/scripts/**", "/styles/**").permitAll()
                         .requestMatchers("/*.js", "/*.css", "/*.ico", "/*.svg", "/*.png", "/*.jpg", "/*.gif").permitAll()
@@ -67,7 +72,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/menu/subcategories/all").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menu/subcategories/by-category").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/uploads/**").permitAll()
                         // Для Telegram бота
                         .requestMatchers("/webhook/**").permitAll()
 

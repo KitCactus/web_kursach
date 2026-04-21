@@ -61,7 +61,8 @@ export class MenuComponent implements OnInit {
   getPhotoUrl(photoFileId: string): string {
     if (!photoFileId) return '';
     const baseUrl = environment.apiUrl.replace('/api', '');
-    return `${baseUrl}/uploads/${photoFileId}`;
+    const url = `${baseUrl}/uploads/${photoFileId}`;
+    return url;
   }
 
   ngOnInit(): void {

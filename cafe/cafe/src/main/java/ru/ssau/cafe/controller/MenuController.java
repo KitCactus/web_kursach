@@ -16,10 +16,13 @@ import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/menu")
 public class MenuController {
+    private static final Logger logger = LoggerFactory.getLogger(MenuController.class);
 
     private final MenuService menuService;
 
@@ -27,6 +30,7 @@ public class MenuController {
     public ResponseEntity<String> uploadPhoto(@RequestParam("file") MultipartFile file) {
         try {
             if (file.isEmpty()) {
+                logger.warn("Upload attempt with empty file");
                 return ResponseEntity.badRequest().body("Файл пустой");
             }
             String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "photo";
@@ -34,8 +38,10 @@ public class MenuController {
             String filename = UUID.randomUUID() + "_" + safeName;
 
             Path uploadDir = Paths.get(System.getProperty("user.dir"), "uploads");
+            logger.info("Uploading file: {} to directory: {}", filename, uploadDir.toAbsolutePath());
             Files.createDirectories(uploadDir);
             Files.copy(file.getInputStream(), uploadDir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            logger.info("File uploaded successfully: {}", filename);
 
             return ResponseEntity.ok(filename);
         } catch (IOException e) {
