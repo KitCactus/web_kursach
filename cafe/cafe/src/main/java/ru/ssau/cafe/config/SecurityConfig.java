@@ -99,7 +99,6 @@ public class SecurityConfig {
                         // Отчёты
                         .requestMatchers("/api/reports/**").hasRole("ADMIN")
 
-                        // Всё остальное — требует аутентификации
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)
