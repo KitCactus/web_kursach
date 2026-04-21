@@ -5,17 +5,17 @@ import { MenuComponent } from './components/menu/menu.component';
 import { OrdersComponent } from './components/orders/orders.component';
 import { StaffManagementComponent } from './components/staff-management/staff-management.component';
 import { ReportsComponent } from './components/reports/reports.component';
-import { AuthGuard } from './guards/auth.guard';
-import { AdminGuard } from './guards/admin.guard';
+import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/role.guard';
+import { loginRedirectGuard } from './guards/login-redirect.guard';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-  { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
-  { path: 'menu', component: MenuComponent, canActivate: [AuthGuard] },
-  { path: 'orders', component: OrdersComponent, canActivate: [AuthGuard] },
-  // Только для админа:
-  { path: 'admin/staff', component: StaffManagementComponent, canActivate: [AuthGuard, AdminGuard] },
-  { path: 'admin/reports', component: ReportsComponent, canActivate: [AuthGuard, AdminGuard] },
+  { path: 'login', component: LoginComponent, canActivate: [loginRedirectGuard] },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
+  { path: 'menu', component: MenuComponent, canActivate: [authGuard] },
+  { path: 'orders', component: OrdersComponent, canActivate: [authGuard] },
+  { path: 'admin/staff', component: StaffManagementComponent, canActivate: [authGuard, adminGuard] },
+  { path: 'admin/reports', component: ReportsComponent, canActivate: [authGuard, adminGuard] },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: '**', redirectTo: '/login' }
 ];

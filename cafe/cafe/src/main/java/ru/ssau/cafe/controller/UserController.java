@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
@@ -84,7 +84,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // ===== Эндпоинты для текущего пользователя (доступны всем аутентифицированным) =====
+    // Эндпоинты для текущего пользователя (доступны всем аутентифицированным) 
 
     @GetMapping("/me")
     public ResponseEntity<UserDto> getOwnProfile(Authentication auth) {

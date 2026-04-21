@@ -64,7 +64,7 @@
           <div class="menu-item-card" [class.hidden]="item.isHidden">
             @if (item.photoFileId) {
               <div class="item-image">
-                <img [src]="item.photoFileId" [alt]="item.name" />
+                <img [src]="getPhotoUrl(item.photoFileId)" [alt]="item.name" />
               </div>
             }
 
@@ -173,7 +173,7 @@
         <div class="form-group">
           <label>Фото блюда</label>
           @if (newItem.photoFileId) {
-            <img [src]="newItem.photoFileId" style="width:100%;height:300px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
+            <img [src]="getPhotoUrl(newItem.photoFileId)" style="width:100%;height:300px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
           }
           <input type="file" accept="image/*" (change)="onPhotoSelected($event, false)" />
           @if (isUploadingPhoto) {
@@ -243,7 +243,7 @@
         <div class="form-group">
           <label>Фото блюда</label>
           @if (selectedItem.photoFileId) {
-            <img [src]="selectedItem.photoFileId" style="width:100%;height:300px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
+            <img [src]="getPhotoUrl(selectedItem.photoFileId)" style="width:100%;height:300px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
           }
           <input type="file" accept="image/*" (change)="onPhotoSelected($event, true)" />
           @if (isUploadingPhoto) {

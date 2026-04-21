@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface DailyReport {
   date: string;
@@ -41,12 +42,12 @@ export interface SalesByCategory {
   providedIn: 'root'
 })
 export class ReportService {
-  private readonly API_URL = 'http://localhost:8080/reports';
+  private readonly API_URL = `${environment.apiUrl}/reports`;
 
   constructor(private http: HttpClient) {}
 
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     return new HttpHeaders({
       'Authorization': `Basic ${token}`,
       'Content-Type': 'application/json'

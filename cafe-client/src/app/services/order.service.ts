@@ -13,7 +13,7 @@ export class OrderService {
   constructor(private http: HttpClient) {}
 
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     return new HttpHeaders({
       'Authorization': `Basic ${token}`,
       'Content-Type': 'application/json'

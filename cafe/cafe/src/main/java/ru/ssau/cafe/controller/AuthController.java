@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -19,20 +19,13 @@ public class AuthController {
         this.authService = authService;
     }
 
-    /**
-     * Получение информации о текущем пользователе
-     * Используется после Basic Auth для получения данных пользователя
-     */
+
     @GetMapping("/me")
     public ResponseEntity<UserDto> getCurrentUser(@RequestParam String username) {
         UserDto user = authService.getCurrentUser(username);
         return ResponseEntity.ok(user);
     }
 
-    /**
-     * Эндпоинт для логина (для фронтенда)
-     * Проверяет логин и пароль, возвращает информацию о пользователе
-     */
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@RequestBody AuthRequestDto request) {
         AuthResponseDto response = authService.authenticate(request.getUsername(), request.getPassword());

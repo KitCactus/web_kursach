@@ -5,8 +5,8 @@ import { Router } from '@angular/router';
 import { MenuItem, CreateMenuItemRequest } from '../../interfaces';
 import { MenuService } from '../../services';
 import { AuthService } from '../../services/auth.service';
-import { environment } from '../../../environments/environment';
 import { PricePipe } from '../../pipes/price.pipe';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-menu',
@@ -31,8 +31,8 @@ export class MenuComponent implements OnInit {
   isCreateModalOpen = false;
   isEditModalOpen = false;
   selectedItem: MenuItem | null = null;
-  createErrors: { name?: string; price?: string; subcategory?: string } = {};
-  editErrors: { name?: string; price?: string; subcategory?: string } = {};
+  createErrors: { name?: string; price?: string; subcategory?: string; description?: string } = {};
+  editErrors: { name?: string; price?: string; subcategory?: string; description?: string } = {};
 
   newItem: CreateMenuItemRequest = {
     name: '',
@@ -56,6 +56,12 @@ export class MenuComponent implements OnInit {
 
   get isStaff(): boolean {
     return this.authService.isStaff;
+  }
+
+  getPhotoUrl(photoFileId: string): string {
+    if (!photoFileId) return '';
+    const baseUrl = environment.apiUrl.replace('/api', '');
+    return `${baseUrl}/uploads/${photoFileId}`;
   }
 
   ngOnInit(): void {
@@ -277,11 +283,10 @@ export class MenuComponent implements OnInit {
     this.isUploadingPhoto = true;
     this.menuService.uploadPhoto(input.files[0]).subscribe({
       next: (filename: string) => {
-        const photoUrl = `${environment.apiUrl}/uploads/${filename}`;
         if (isEdit && this.selectedItem) {
-          this.selectedItem.photoFileId = photoUrl;
+          this.selectedItem.photoFileId = filename;
         } else {
-          this.newItem.photoFileId = photoUrl;
+          this.newItem.photoFileId = filename;
         }
         this.isUploadingPhoto = false;
       },

@@ -14,7 +14,6 @@ export class UserService {
 
   constructor(private http: HttpClient) {}
 
-  // Маппинг: бэкенд возвращает fullName, разбиваем на firstName/lastName для UI
   private mapUser(u: any): User {
     const parts = (u.fullName || '').split(' ');
     return {
@@ -38,7 +37,6 @@ export class UserService {
   }
 
   createUser(user: any, role: 'USER' | 'ADMIN'): Observable<User> {
-    // Объединяем firstName + lastName → fullName для бэкенда
     const payload = {
       ...user,
       fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username

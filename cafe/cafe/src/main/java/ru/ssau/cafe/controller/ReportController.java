@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/reports")
+@RequestMapping("/api/reports")
 @PreAuthorize("hasRole('ADMIN')")
 public class ReportController {
 

@@ -20,13 +20,18 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser && savedUser !== 'undefined') {
+    const savedUser = sessionStorage.getItem('currentUser');
+    const savedToken = sessionStorage.getItem('authToken');
+    if (savedUser && savedUser !== 'undefined' && savedToken) {
       try {
         this.currentUserSubject.next(JSON.parse(savedUser));
       } catch (e) {
-        localStorage.removeItem('currentUser');
+        sessionStorage.removeItem('currentUser');
+        sessionStorage.removeItem('authToken');
       }
+    } else {
+      sessionStorage.removeItem('currentUser');
+      sessionStorage.removeItem('authToken');
     }
   }
 
@@ -58,7 +63,7 @@ export class AuthService {
         return user;
       }),
       tap(user => {
-        localStorage.setItem('authToken', btoa(`${username}:${password}`));
+        sessionStorage.setItem('authToken', btoa(`${username}:${password}`));
         this.setCurrentUser(user);
         // Помечаем пользователя активным
         this.http.patch(`${environment.apiUrl}/users/${user.id}/active?active=true`, {},
@@ -74,20 +79,20 @@ export class AuthService {
 
   logout(): void {
     const user = this.currentUser;
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     if (user && token) {
       // Помечаем пользователя неактивным перед выходом
       this.http.patch(`${environment.apiUrl}/users/${user.id}/active?active=false`, {},
         { headers: { 'Authorization': `Basic ${token}`, 'Content-Type': 'application/json' } }
       ).subscribe({ error: () => {} });
     }
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('authToken');
+    sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('authToken');
     this.currentUserSubject.next(null);
   }
 
   private setCurrentUser(user: User): void {
-    localStorage.setItem('currentUser', JSON.stringify(user));
+    sessionStorage.setItem('currentUser', JSON.stringify(user));
     this.currentUserSubject.next(user);
   }
 
@@ -99,7 +104,7 @@ export class AuthService {
         'Content-Type': 'application/json'
       });
     }
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     if (!token) {
       throw new Error('No authentication token available');
     }
@@ -110,7 +115,7 @@ export class AuthService {
   }
 
   getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     if (!token) {
       throw new Error('No authentication token found');
     }

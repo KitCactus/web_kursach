@@ -1,5 +1,6 @@
 package ru.ssau.cafe.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,6 +23,9 @@ public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
 
+    @Value("${cors.allowed-origins}")
+    private String allowedOrigins;
+
     public SecurityConfig(UserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
@@ -34,7 +38,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
@@ -50,48 +54,50 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // ========== ПУБЛИЧНЫЕ ЭНДПОИНТЫ (не требуют авторизации) ==========
+                        // SPA (главная страница и статические файлы)
+                        .requestMatchers("/", "/index.html").permitAll()
+                        .requestMatchers("/assets/**", "/scripts/**", "/styles/**").permitAll()
+                        .requestMatchers("/*.js", "/*.css", "/*.ico", "/*.svg", "/*.png", "/*.jpg", "/*.gif").permitAll()
+                        // Angular SPA маршруты - перенаправляются на index.html
+                        .requestMatchers("/dashboard", "/menu", "/orders", "/admin/**", "/login").permitAll()
+
                         // Для бота (доступно всем)
-                        .requestMatchers("/menu/bot").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/menu/categories/all").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/menu/subcategories/all").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/menu/subcategories/by-category").permitAll()
-                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/api/menu/bot").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/menu/categories/all").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/menu/subcategories/all").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/menu/subcategories/by-category").permitAll()
+                        .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
-                        // Для Telegram бота (вебхуки)
+                        // Для Telegram бота
                         .requestMatchers("/webhook/**").permitAll()
 
-                        // ========== ЭНДПОИНТЫ ДЛЯ СОТРУДНИКОВ И АДМИНОВ ==========
                         // Меню (просмотр, редактирование, добавление)
-                        .requestMatchers(HttpMethod.GET, "/menu").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.GET, "/menu/**").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.POST, "/menu").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.PUT, "/menu/**").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.PATCH, "/menu/*/availability").hasAnyRole("ADMIN", "USER")
-                        // Загрузка фото
-                        .requestMatchers(HttpMethod.POST, "/menu/upload").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET, "/api/menu").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET, "/api/menu/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.POST, "/api/menu").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.POST, "/api/menu/upload").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.PUT, "/api/menu/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.PATCH, "/api/menu/**").hasAnyRole("ADMIN", "USER")
                         // Заказы (просмотр, изменение статуса)
-                        .requestMatchers(HttpMethod.GET, "/orders/**").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.PATCH, "/orders/*/status").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.PATCH, "/api/orders/*/status").hasAnyRole("ADMIN", "USER")
 
-                        // ========== ПРОФИЛЬ (доступен любому авторизованному) ==========
-                        .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/users/me").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/users/me/password").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/me").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/me/password").authenticated()
 
-                        // ========== ЭНДПОИНТЫ ТОЛЬКО ДЛЯ АДМИНОВ ==========
                         // Управление пользователями
-                        .requestMatchers(HttpMethod.GET, "/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/users").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/users/*").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/users/*/active").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/users/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/*/active").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasRole("ADMIN")
                         // Скрытие товаров
-                        .requestMatchers(HttpMethod.PATCH, "/menu/*/visibility").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/menu/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/menu/*/visibility").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/menu/*").hasRole("ADMIN")
                         // Отчёты
-                        .requestMatchers("/reports/**").hasRole("ADMIN")
+                        .requestMatchers("/api/reports/**").hasRole("ADMIN")
 
                         // Всё остальное — требует аутентификации
                         .anyRequest().authenticated()

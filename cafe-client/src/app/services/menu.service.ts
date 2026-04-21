@@ -47,7 +47,6 @@ export class MenuService {
   uploadPhoto(file: File): Observable<string> {
     const formData = new FormData();
     formData.append('file', file);
-    // Заголовки (Authorization без Content-Type) добавляет interceptor автоматически
     return this.http.post(`${this.API_URL}/upload`, formData, {
       responseType: 'text'
     });
