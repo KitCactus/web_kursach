@@ -162,7 +162,7 @@
 				</executions>
 			</plugin>
 
-			<!-- Копирование собранного фронта в classpath:/static/ -->
+			<!-- Копирование собранного фронта в classpath:/static/ и uploads рядом с JAR -->
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
 				<executions>
@@ -177,6 +177,22 @@
 							<resources>
 								<resource>
 									<directory>../../cafe-client/dist/cafe-client/browser</directory>
+									<filtering>false</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-uploads</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/uploads/</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/uploads</directory>
 									<filtering>false</filtering>
 								</resource>
 							</resources>

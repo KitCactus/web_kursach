@@ -3,6 +3,7 @@ package ru.ssau.cafe.controller;
 import ru.ssau.cafe.dto.MenuItemDto;
 import ru.ssau.cafe.service.MenuService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,9 @@ import org.slf4j.LoggerFactory;
 public class MenuController {
     private static final Logger logger = LoggerFactory.getLogger(MenuController.class);
 
+    @Value("${app.uploads.dir}")
+    private String uploadsDir;
+
     private final MenuService menuService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -37,8 +41,8 @@ public class MenuController {
             String safeName = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
             String filename = UUID.randomUUID() + "_" + safeName;
 
-            Path uploadDir = Paths.get(System.getProperty("user.dir"), "uploads");
-            logger.info("Uploading file: {} to directory: {}", filename, uploadDir.toAbsolutePath());
+            Path uploadDir = Paths.get(uploadsDir).toAbsolutePath().normalize();
+            logger.info("Uploading file: {} to directory: {}", filename, uploadDir);
             Files.createDirectories(uploadDir);
             Files.copy(file.getInputStream(), uploadDir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
             logger.info("File uploaded successfully: {}", filename);
@@ -53,7 +57,7 @@ public class MenuController {
     @DeleteMapping("/upload/{filename}")
     public ResponseEntity<Void> deletePhoto(@PathVariable String filename) {
         try {
-            Path file = Paths.get(System.getProperty("user.dir"), "uploads").resolve(filename);
+            Path file = Paths.get(uploadsDir).toAbsolutePath().normalize().resolve(filename);
             Files.deleteIfExists(file);
             return ResponseEntity.noContent().build();
         } catch (IOException e) {

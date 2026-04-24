@@ -1,5 +1,6 @@
 package ru.ssau.cafe.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
@@ -12,15 +13,17 @@ import org.slf4j.LoggerFactory;
 public class WebConfig implements WebMvcConfigurer {
     private static final Logger logger = LoggerFactory.getLogger(WebConfig.class);
 
+    @Value("${app.uploads.dir}")
+    private String uploadsDir;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String uploadDir = Paths.get(System.getProperty("user.dir"), "uploads").toUri().toString();
+        String uploadLocation = Paths.get(uploadsDir).toAbsolutePath().normalize().toUri().toString();
         logger.info("WebConfig: Configuring uploads handler");
         logger.info("  Resource pattern: /uploads/**");
-        logger.info("  File location: {}", uploadDir);
-        logger.info("  Absolute path: {}", Paths.get(System.getProperty("user.dir"), "uploads").toAbsolutePath());
+        logger.info("  File location: {}", uploadLocation);
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(uploadDir)
+                .addResourceLocations(uploadLocation)
                 .setCachePeriod(3600);
     }
 
