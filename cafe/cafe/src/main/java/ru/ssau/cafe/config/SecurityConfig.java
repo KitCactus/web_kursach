@@ -65,6 +65,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // Статические ресурсы (фотки, стили, скрипты) - доступно всем БЕЗ аутентификации
+                        .requestMatchers("/uploads/**").permitAll() 
                         .requestMatchers("/", "/index.html").permitAll()
                         .requestMatchers("/assets/**", "/scripts/**", "/styles/**").permitAll()
                         .requestMatchers("/*.js", "/*.css", "/*.ico", "/*.svg", "/*.png", "/*.jpg", "/*.gif").permitAll()

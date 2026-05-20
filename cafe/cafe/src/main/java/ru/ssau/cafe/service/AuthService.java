@@ -34,12 +34,7 @@ public class AuthService {
         );
     }
 
-    /**
-     * Аутентификация пользователя по username и password
-     * @param username логин
-     * @param rawPassword пароль в открытом виде
-     * @return AuthResponseDto с информацией о пользователе или null
-     */
+    
     @Transactional
     public AuthResponseDto authenticate(String username, String rawPassword) {
         User user = userRepository.findByUsername(username).orElse(null);
@@ -67,11 +62,6 @@ public class AuthService {
         );
     }
 
-    /**
-     * Получение текущего пользователя по username (используется после Basic Auth)
-     * @param username логин
-     * @return UserDto с информацией о пользователе
-     */
     public UserDto getCurrentUser(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found: " + username));

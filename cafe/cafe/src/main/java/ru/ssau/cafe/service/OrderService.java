@@ -89,7 +89,7 @@ public class OrderService {
         return convertToDto(order);
     }
 
-    // ИСПРАВЛЕННЫЙ МЕТОД: выручка за сегодня
+    // выручка за сегодня
     public BigDecimal getTodayRevenue() {
         LocalDateTime start = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
         LocalDateTime end = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);

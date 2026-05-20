@@ -136,7 +136,6 @@ public class UserService {
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        // Очищаем связи перед удалением, иначе PostgreSQL упадёт на FK
         user.getRoles().clear();
         userRepository.save(user);
         userRepository.deleteById(id);
@@ -150,10 +149,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    /**
-     * Пользователь обновляет свой собственный профиль (имя, email, телефон).
-     * Логин изменить нельзя.
-     */
+
     @Transactional
     public UserDto updateOwnProfile(String username, UserDto userDto) {
         User user = userRepository.findByUsername(username)
@@ -172,9 +168,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    /**
-     * Пользователь меняет свой собственный пароль.
-     */
+
     @Transactional
     public void changeOwnPassword(String username, String newPassword) {
         User user = userRepository.findByUsername(username)

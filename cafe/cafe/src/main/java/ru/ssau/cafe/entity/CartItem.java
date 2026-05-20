@@ -20,14 +20,10 @@ public class CartItem {
     @JoinColumn(name = "menu_item_id")
     private MenuItem menuItem;
 
-    @Column(name = "item_name", nullable = false, length = 200)
-    private String itemName;
 
     @Column(nullable = false)
     private Integer quantity = 1;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
 
     @Column(name = "added_at")
     private LocalDateTime addedAt = LocalDateTime.now();
@@ -37,9 +33,7 @@ public class CartItem {
     public CartItem(Client client, MenuItem menuItem, String itemName, Integer quantity, BigDecimal price) {
         this.client = client;
         this.menuItem = menuItem;
-        this.itemName = itemName;
         this.quantity = quantity;
-        this.price = price;
         this.addedAt = LocalDateTime.now();
     }
 
@@ -53,14 +47,8 @@ public class CartItem {
     public MenuItem getMenuItem() { return menuItem; }
     public void setMenuItem(MenuItem menuItem) { this.menuItem = menuItem; }
 
-    public String getItemName() { return itemName; }
-    public void setItemName(String itemName) { this.itemName = itemName; }
-
     public Integer getQuantity() { return quantity; }
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
-
-    public BigDecimal getPrice() { return price; }
-    public void setPrice(BigDecimal price) { this.price = price; }
 
     public LocalDateTime getAddedAt() { return addedAt; }
     public void setAddedAt(LocalDateTime addedAt) { this.addedAt = addedAt; }
