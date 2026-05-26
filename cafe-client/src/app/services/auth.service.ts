@@ -97,6 +97,13 @@ export class AuthService {
     this.currentUserSubject.next(user);
   }
 
+  patchCurrentUser(patch: Partial<User>): void {
+    const current = this.currentUser;
+    if (!current) return;
+    const updated = { ...current, ...patch };
+    this.setCurrentUser(updated);
+  }
+
   createAuthHeaders(username: string, password?: string): HttpHeaders {
     if (password) {
       const encodedAuth = btoa(`${username}:${password}`);

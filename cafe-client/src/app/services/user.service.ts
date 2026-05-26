@@ -49,7 +49,7 @@ export class UserService {
   updateUser(id: number, user: Partial<User>): Observable<User> {
     const payload = {
       ...user,
-      fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.fullName
+      fullName: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim()
     };
     return this.http.put<any>(`${this.API_URL}/${id}`, payload).pipe(
       map(u => this.mapUser(u))

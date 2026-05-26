@@ -5,13 +5,14 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { Order } from '../../interfaces';
 import { OrderService, WebSocketService } from '../../services';
+import { PricePipe } from '../../pipes/price.pipe';
 
 type OrderStatus = Order['status'];
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PricePipe],
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.css'
 })

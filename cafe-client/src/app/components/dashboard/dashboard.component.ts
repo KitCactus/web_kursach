@@ -25,6 +25,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   currentDate = '';
   private timeInterval: any;
   private wsSub: Subscription | null = null;
+  private userSub: Subscription | null = null;
 
   constructor(
     private authService: AuthService,
@@ -36,7 +37,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.currentUser = this.authService.currentUser;
+    this.userSub = this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+      this.cdr.markForCheck();
+    });
     this.loadDashboardData();
     this.startClock();
 
@@ -114,6 +118,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  get isAdmin(): boolean {
+    return this.authService.isAdmin;
+  }
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
@@ -131,6 +139,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.timeInterval) clearInterval(this.timeInterval);
     this.wsSub?.unsubscribe();
+    this.userSub?.unsubscribe();
     this.wsService.disconnect();
   }
 }

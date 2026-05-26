@@ -1,75 +1,135 @@
 <div class="dashboard-container">
   <header class="dashboard-header">
-    <div class="header-left">
-      <h1>Coffee&Go</h1>
+    <div class="header-logo">
+      <span class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M18 8h1a4 4 0 0 1 0 8h-1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="1" x2="6" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="14" y1="1" x2="14" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="logo-text">Coffee&Go</span>
     </div>
+
     <div class="header-right">
-      <div class="user-info">
-        <span>{{ currentUser?.fullName || currentUser?.username }}</span>
-        <span class="user-role">{{ currentUser?.role }}</span>
+      <div class="header-user">
+        <span class="user-name">{{ currentUser?.fullName || currentUser?.username }}</span>
+        <span class="user-role-badge">{{ currentUser?.role === 'ROLE_ADMIN' || currentUser?.role === 'ADMIN' ? 'Администратор' : 'Сотрудник' }}</span>
       </div>
-      <button class="logout-button" (click)="logout()">Выход</button>
+      <button class="logout-btn" (click)="logout()">Выход</button>
     </div>
   </header>
 
   <main class="dashboard-main">
-    <div class="clock-widget">
-      <div class="clock-time">{{ currentTime }}</div>
-      <div class="clock-date">{{ currentDate }}</div>
-    </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon revenue-icon">💰</div>
-        <div class="stat-content">
-          <h3>Выручка сегодня</h3>
-          <p class="stat-value">{{ todayRevenue | price }}</p>
-        </div>
+    <div class="hero-section">
+      <div class="hero-left">
+        <p class="hero-date">{{ currentDate }}</p>
+        <h1 class="hero-greeting">Добро пожаловать, {{ (currentUser?.fullName || currentUser?.username)?.split(' ')[0] }}</h1>
       </div>
-
-      <div class="stat-card">
-        <div class="stat-icon orders-icon">📋</div>
-        <div class="stat-content">
-          <h3>Заказы сегодня</h3>
-          <p class="stat-value">{{ todayOrders }}</p>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon pending-icon">⏳</div>
-        <div class="stat-content">
-          <h3>В ожидании</h3>
-          <p class="stat-value">{{ pendingOrders }}</p>
-        </div>
+      <div class="hero-clock">
+        <span class="clock-digits">{{ currentTime }}</span>
       </div>
     </div>
 
-    <div class="navigation-grid">
-      <button class="nav-card" (click)="navigateToMenu()">
-        <div class="nav-icon">🍽️</div>
-        <h3>Меню</h3>
-        <p>Управление блюдами</p>
-      </button>
+    <div class="stats-row">
+      <div class="stat-card stat-green">
+        <span class="stat-label">Выручка сегодня</span>
+        <span class="stat-value">{{ todayRevenue | price }}</span>
+      </div>
+      <div class="stat-card stat-purple">
+        <span class="stat-label">Заказов сегодня</span>
+        <span class="stat-value">{{ todayOrders }}</span>
+      </div>
+      <div class="stat-card stat-amber">
+        <span class="stat-label">Ожидают</span>
+        <span class="stat-value">{{ pendingOrders }}</span>
+      </div>
+    </div>
 
-      <button class="nav-card" (click)="navigateToOrders()">
-        <div class="nav-icon">📦</div>
-        <h3>Заказы</h3>
-        <p>Обработка заказов</p>
-      </button>
+    <div class="nav-section">
+      <h2 class="nav-title">Разделы</h2>
+      <div class="nav-grid">
 
-      @if (currentUser?.role === 'ADMIN') {
-        <button class="nav-card" (click)="navigateToStaff()">
-          <div class="nav-icon">👥</div>
-          <h3>Персонал</h3>
-          <p>Управление сотрудниками</p>
+        <button class="nav-card" (click)="navigateToMenu()">
+          <div class="nav-card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <rect x="9" y="3" width="6" height="4" rx="1" stroke="currentColor" stroke-width="2"/>
+              <line x1="9" y1="12" x2="15" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="9" y1="16" x2="13" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="nav-card-text">
+            <span class="nav-card-title">Меню</span>
+            <span class="nav-card-desc">Управление блюдами</span>
+          </div>
+          <svg class="nav-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </button>
 
-        <button class="nav-card" (click)="navigateToReports()">
-          <div class="nav-icon">📊</div>
-          <h3>Отчёты</h3>
-          <p>Аналитика и статистика</p>
+        <button class="nav-card" (click)="navigateToOrders()">
+          <div class="nav-card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="nav-card-text">
+            <span class="nav-card-title">Заказы</span>
+            <span class="nav-card-desc">Обработка заказов</span>
+          </div>
+          @if (pendingOrders > 0) {
+            <span class="nav-badge">{{ pendingOrders }}</span>
+          }
+          <svg class="nav-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </button>
-      }
+
+        @if (isAdmin) {
+          <button class="nav-card" (click)="navigateToStaff()">
+            <div class="nav-card-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="nav-card-text">
+              <span class="nav-card-title">Персонал</span>
+              <span class="nav-card-desc">Управление сотрудниками</span>
+            </div>
+            <svg class="nav-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <button class="nav-card" (click)="navigateToReports()">
+            <div class="nav-card-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <line x1="18" y1="20" x2="18" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="12" y1="20" x2="12" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="6" y1="20" x2="6" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="nav-card-text">
+              <span class="nav-card-title">Отчёты</span>
+              <span class="nav-card-desc">Аналитика и статистика</span>
+            </div>
+            <svg class="nav-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        }
+
+      </div>
     </div>
+
   </main>
 </div>

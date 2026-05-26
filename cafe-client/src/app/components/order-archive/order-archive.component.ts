@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Order } from '../../interfaces';
 import { OrderService } from '../../services';
+import { PricePipe } from '../../pipes/price.pipe';
 
 type OrderStatus = Order['status'];
 
 @Component({
   selector: 'app-order-archive',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PricePipe],
   templateUrl: './order-archive.component.html',
   styleUrl: './order-archive.component.css'
 })

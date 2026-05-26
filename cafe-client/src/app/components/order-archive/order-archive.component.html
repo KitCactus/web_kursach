@@ -9,7 +9,7 @@
   <div class="archive-content">
     @if (errorMessage) {
       <div class="error-banner" (click)="errorMessage = null">
-        ⚠️ {{ errorMessage }} <span class="error-close">×</span>
+        {{ errorMessage }} <span class="error-close">×</span>
       </div>
     }
 
@@ -56,7 +56,7 @@
     } @else {
       <div class="orders-grid">
         @for (order of filteredOrders; track order.id) {
-          <div class="order-card" [style.border-color]="getStatusColor(order.status)">
+          <div class="order-card" [class.done]="order.status === 'COMPLETED' || order.status === 'CANCELLED'" [style.border-left-color]="getStatusColor(order.status)">
             <div class="order-header">
               <div class="order-number">
                 <strong>Заказ #{{ order.id }}</strong>
@@ -87,7 +87,7 @@
                 <div class="order-item">
                   <span class="item-quantity">{{ item.quantity }}x</span>
                   <span class="item-name">{{ item.menuItemName }}</span>
-                  <span class="item-price">{{ item.price | currency:'RUB' }}</span>
+                  <span class="item-price">{{ item.price | price }}</span>
                 </div>
               }
             </div>
@@ -100,7 +100,7 @@
 
             <div class="order-footer">
               <div class="order-total">
-                <strong>Итого:</strong> {{ order.totalAmount | currency:'RUB' }}
+                <strong>Итого:</strong> {{ order.totalAmount | price }}
               </div>
             </div>
           </div>
