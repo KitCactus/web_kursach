@@ -3,3 +3,4 @@ export * from './menu.service';
 export * from './order.service';
 export * from './user.service';
 export * from './report.service';
+export * from './websocket.service';

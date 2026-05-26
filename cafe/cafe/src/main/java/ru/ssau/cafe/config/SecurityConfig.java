@@ -36,7 +36,7 @@ public class SecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring().requestMatchers("/uploads/**");
+        return web -> web.ignoring().requestMatchers("/api/images/**");
     }
 
     @Bean
@@ -64,8 +64,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Статические ресурсы (фотки, стили, скрипты) - доступно всем БЕЗ аутентификации
-                        .requestMatchers("/uploads/**").permitAll() 
+                        // Статические ресурсы и прокси картинок из Telegram - доступно всем
+                        .requestMatchers("/api/images/**").permitAll()
                         .requestMatchers("/", "/index.html").permitAll()
                         .requestMatchers("/assets/**", "/scripts/**", "/styles/**").permitAll()
                         .requestMatchers("/*.js", "/*.css", "/*.ico", "/*.svg", "/*.png", "/*.jpg", "/*.gif").permitAll()
@@ -74,11 +74,15 @@ public class SecurityConfig {
 
                         // Для бота (доступно всем)
                         .requestMatchers("/api/menu/bot").permitAll()
+                        .requestMatchers("/api/menu/bot/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menu/categories/all").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menu/subcategories/all").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menu/subcategories/by-category").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
-                        // Для Telegram бота
+                        // WebSocket
+                        .requestMatchers("/ws/**").permitAll()
+                        // Бот-эндпоинты (защищены API-ключом внутри контроллера)
+                        .requestMatchers("/api/bot/**").permitAll()
                         .requestMatchers("/webhook/**").permitAll()
 
                         // Меню (просмотр, редактирование, добавление)

@@ -2,7 +2,8 @@ export interface Order {
   id: number;
   orderNumber?: string;   // необязательно — бэкенд не возвращает
   clientId?: number;
-  clientName?: string;    // имя клиента из Telegram
+  clientName?: string;
+  clientPhone?: string;
   orderDate?: string;     // дата заказа
   items: OrderItem[];
   totalAmount: number;

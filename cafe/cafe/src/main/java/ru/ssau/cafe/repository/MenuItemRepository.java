@@ -18,6 +18,18 @@ public interface MenuItemRepository extends JpaRepository<MenuItem, Long> {
     @Query("SELECT m FROM MenuItem m WHERE m.isHidden = false AND m.isAvailable = true")
     List<MenuItem> findAvailableForBot();
 
+    @Query("SELECT m FROM MenuItem m WHERE m.isHidden = false AND m.isAvailable = true AND m.subcategory = :subcategory")
+    List<MenuItem> findAvailableBySubcategory(@Param("subcategory") String subcategory);
+
+    @Query("SELECT m FROM MenuItem m WHERE m.isHidden = false AND m.isAvailable = true AND m.name = :name")
+    List<MenuItem> findAvailableByExactName(@Param("name") String name);
+
+    @Query("SELECT m FROM MenuItem m WHERE m.isHidden = false AND m.isAvailable = true AND m.name = :name AND m.subcategory = :subcategory")
+    List<MenuItem> findAvailableByNameAndSubcategory(@Param("name") String name, @Param("subcategory") String subcategory);
+
+    @Query("SELECT m FROM MenuItem m WHERE m.isHidden = false AND m.isAvailable = true AND m.name = :name AND m.description = :description")
+    Optional<MenuItem> findAvailableByNameAndDescription(@Param("name") String name, @Param("description") String description);
+
     @Query("SELECT m FROM MenuItem m WHERE LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%'))")
     List<MenuItem> searchByName(@Param("name") String name);
 

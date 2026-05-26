@@ -1,9 +1,10 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Order, OrderStatusUpdate } from '../../interfaces';
-import { OrderService } from '../../services';
+import { Subscription } from 'rxjs';
+import { Order } from '../../interfaces';
+import { OrderService, WebSocketService } from '../../services';
 
 type OrderStatus = Order['status'];
 
@@ -14,7 +15,7 @@ type OrderStatus = Order['status'];
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.css'
 })
-export class OrdersComponent implements OnInit {
+export class OrdersComponent implements OnInit, OnDestroy {
   orders: Order[] = [];
   filteredOrders: Order[] = [];
   searchTerm = '';
@@ -23,54 +24,87 @@ export class OrdersComponent implements OnInit {
   isLoading = false;
   todayRevenue = 0;
   errorMessage: string | null = null;
+  private wsSub: Subscription | null = null;
 
   constructor(
     private orderService: OrderService,
+    private wsService: WebSocketService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private zone: NgZone
   ) {}
 
   ngOnInit(): void {
     this.loadOrders();
     this.loadTodayRevenue();
+    this.wsService.connect();
+    this.wsSub = this.wsService.orders$.subscribe(event => {
+      this.zone.run(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const orderDate = new Date(event.order.orderDate || event.order.createdAt || '');
+        orderDate.setHours(0, 0, 0, 0);
+
+        if (orderDate < today) return; // уходит в архив — не показываем
+
+        if (event.type === 'CREATED') {
+          this.orders = [event.order, ...this.orders];
+          this.loadTodayRevenue();
+        } else if (event.type === 'STATUS_CHANGED') {
+          const idx = this.orders.findIndex(o => o.id === event.order.id);
+          if (idx !== -1) {
+            this.orders[idx] = event.order;
+            this.orders = [...this.orders]; // триггер change detection
+          }
+        }
+
+        this.filterOrders();
+        this.cdr.detectChanges();
+      });
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.wsSub?.unsubscribe();
+    this.wsService.disconnect();
   }
 
   loadOrders(): void {
     this.isLoading = true;
-    this.errorMessage = null;
-    this.orderService.getAllOrders()
-      .subscribe({
-        next: (orders) => {
-          this.orders = orders.sort((a, b) => {
-            const dateA = new Date(b.orderDate || b.createdAt || '').getTime();
-            const dateB = new Date(a.orderDate || a.createdAt || '').getTime();
-            return dateA - dateB;
-          });
-          this.filteredOrders = this.orders;
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.error('Error loading orders:', error);
-          this.errorMessage = 'Не удалось загрузить заказы. Проверьте подключение к серверу.';
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        }
-      });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    this.orderService.getAllOrders().subscribe({
+      next: (orders) => {
+        this.orders = orders
+          .filter(o => {
+            const d = new Date(o.orderDate || o.createdAt || '');
+            d.setHours(0, 0, 0, 0);
+            return d >= today;
+          })
+          .sort((a, b) =>
+            new Date(b.orderDate || b.createdAt || '').getTime() -
+            new Date(a.orderDate || a.createdAt || '').getTime()
+          );
+        this.filterOrders();
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMessage = 'Не удалось загрузить заказы. Проверьте подключение к серверу.';
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   loadTodayRevenue(): void {
-    this.orderService.getTodayRevenue()
-      .subscribe({
-        next: (revenue) => {
-          this.todayRevenue = revenue || 0;
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.error('Error loading revenue:', error);
-          this.cdr.detectChanges();
-        }
-      });
+    this.orderService.getTodayRevenue().subscribe({
+      next: (revenue) => {
+        this.todayRevenue = revenue || 0;
+        this.cdr.detectChanges();
+      },
+      error: () => {}
+    });
   }
 
   filterOrders(): void {
@@ -78,7 +112,7 @@ export class OrdersComponent implements OnInit {
       const orderNum = String(order.id);
       const clientName = order.clientName || '';
       const matchesSearch = orderNum.includes(this.searchTerm) ||
-                         clientName.toLowerCase().includes(this.searchTerm.toLowerCase());
+        clientName.toLowerCase().includes(this.searchTerm.toLowerCase());
       const matchesStatus = !this.selectedStatus || order.status === this.selectedStatus;
       return matchesSearch && matchesStatus;
     });
@@ -87,35 +121,31 @@ export class OrdersComponent implements OnInit {
   updateOrderStatus(order: Order, newStatus: OrderStatus): void {
     const oldStatus = order.status;
     order.status = newStatus;
-
-    const statusUpdate: OrderStatusUpdate = { status: newStatus };
-    this.orderService.updateOrderStatus(order.id, statusUpdate)
-      .subscribe({
-        next: () => {},
-        error: (error) => {
-          order.status = oldStatus;
-          console.error('Error updating order status:', error);
-          this.errorMessage = 'Не удалось изменить статус заказа. Попробуйте снова.';
-        }
-      });
+    this.orderService.updateOrderStatus(order.id, { status: newStatus }).subscribe({
+      next: () => {},
+      error: () => {
+        order.status = oldStatus;
+        this.errorMessage = 'Не удалось изменить статус заказа. Попробуйте снова.';
+      }
+    });
   }
 
   getStatusDisplayName(status: string): string {
-    const statusNames: { [key: string]: string } = {
+    const names: { [key: string]: string } = {
       'PENDING': 'Ожидает',
       'IN_PROGRESS': 'В работе',
-      'PAID': 'Оплачен',
+      'PAID': 'Готов',
       'COMPLETED': 'Завершён',
       'CANCELLED': 'Отменён'
     };
-    return statusNames[status] || status;
+    return names[status] || status;
   }
 
   getStatusColor(status: string): string {
     const colors: { [key: string]: string } = {
       'PENDING': '#D4A030',
       'IN_PROGRESS': '#B8A9D4',
-      'PAID': '#5A9E5A',
+      'PAID': '#494ba1',
       'COMPLETED': '#5A9E5A',
       'CANCELLED': '#D86A6A'
     };
@@ -135,5 +165,9 @@ export class OrdersComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  goToArchive(): void {
+    this.router.navigate(['/orders/archive']);
   }
 }

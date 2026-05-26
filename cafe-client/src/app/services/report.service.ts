@@ -5,42 +5,15 @@ import { environment } from '../../environments/environment';
 
 export interface DailyReport {
   date: string;
-  totalOrders: number;
   totalRevenue: number;
-  ordersByStatus: {
-    PENDING: number;
-    IN_PROGRESS: number;
-    PAID: number;
-    COMPLETED: number;
-    CANCELLED: number;
-  };
-  topItems: Array<{
-    id: number;
-    name: string;
-    quantity: number;
-    revenue: number;
-  }>;
+  ordersCount: number;
+  averageCheck: number;
+  popularItems: { [name: string]: number };
+  salesByCategory: { [category: string]: number };
+  ordersByHour: { [hour: number]: number };
 }
 
-export interface PopularItem {
-  id: number;
-  name: string;
-  category: string;
-  totalOrders: number;
-  totalRevenue: number;
-  averageRating?: number;
-}
-
-export interface SalesByCategory {
-  category: string;
-  totalOrders: number;
-  totalRevenue: number;
-  percentage: number;
-}
-
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ReportService {
   private readonly API_URL = `${environment.apiUrl}/reports`;
 
@@ -48,21 +21,18 @@ export class ReportService {
 
   private getAuthHeaders(): HttpHeaders {
     const token = sessionStorage.getItem('authToken');
-    return new HttpHeaders({
-      'Authorization': `Basic ${token}`,
-      'Content-Type': 'application/json'
-    });
+    return new HttpHeaders({ 'Authorization': `Basic ${token}` });
   }
 
   getDailyReport(date: string): Observable<DailyReport> {
     return this.http.get<DailyReport>(`${this.API_URL}/daily?date=${date}`, { headers: this.getAuthHeaders() });
   }
 
-  getPopularItems(): Observable<PopularItem[]> {
-    return this.http.get<PopularItem[]>(`${this.API_URL}/popular-items`, { headers: this.getAuthHeaders() });
+  getPopularItems(): Observable<{ [name: string]: number }> {
+    return this.http.get<{ [name: string]: number }>(`${this.API_URL}/popular-items`, { headers: this.getAuthHeaders() });
   }
 
-  getSalesByCategory(): Observable<SalesByCategory[]> {
-    return this.http.get<SalesByCategory[]>(`${this.API_URL}/sales-by-category`, { headers: this.getAuthHeaders() });
+  getSalesByCategory(): Observable<{ [category: string]: number }> {
+    return this.http.get<{ [category: string]: number }>(`${this.API_URL}/sales-by-category`, { headers: this.getAuthHeaders() });
   }
 }

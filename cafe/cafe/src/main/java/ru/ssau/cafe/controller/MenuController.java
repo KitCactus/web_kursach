@@ -2,20 +2,14 @@ package ru.ssau.cafe.controller;
 
 import ru.ssau.cafe.dto.MenuItemDto;
 import ru.ssau.cafe.service.MenuService;
+import ru.ssau.cafe.service.TelegramStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.MediaType;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.UUID;
-
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,48 +19,35 @@ import org.slf4j.LoggerFactory;
 public class MenuController {
     private static final Logger logger = LoggerFactory.getLogger(MenuController.class);
 
-    @Value("${app.uploads.dir}")
-    private String uploadsDir;
-
     private final MenuService menuService;
+    private final TelegramStorageService telegramStorageService;
+
+    @Autowired
+    public MenuController(MenuService menuService, TelegramStorageService telegramStorageService) {
+        this.menuService = menuService;
+        this.telegramStorageService = telegramStorageService;
+    }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> uploadPhoto(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            logger.warn("Upload attempt with empty file");
+            return ResponseEntity.badRequest().body("Файл пустой");
+        }
         try {
-            if (file.isEmpty()) {
-                logger.warn("Upload attempt with empty file");
-                return ResponseEntity.badRequest().body("Файл пустой");
-            }
-            String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "photo";
-            String safeName = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
-            String filename = UUID.randomUUID() + "_" + safeName;
-
-            Path uploadDir = Paths.get(uploadsDir).toAbsolutePath().normalize();
-            logger.info("Uploading file: {} to directory: {}", filename, uploadDir);
-            Files.createDirectories(uploadDir);
-            Files.copy(file.getInputStream(), uploadDir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
-            logger.info("File uploaded successfully: {}", filename);
-
-            return ResponseEntity.ok(filename);
+            String fileId = telegramStorageService.uploadFile(file);
+            return ResponseEntity.ok(fileId);
         } catch (IOException e) {
+            logger.error("Ошибка загрузки в Telegram: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Ошибка при загрузке файла: " + e.getMessage());
         }
     }
 
-    @DeleteMapping("/upload/{filename}")
-    public ResponseEntity<Void> deletePhoto(@PathVariable String filename) {
-        try {
-            Path file = Paths.get(uploadsDir).toAbsolutePath().normalize().resolve(filename);
-            Files.deleteIfExists(file);
-            return ResponseEntity.noContent().build();
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-    @Autowired
-    public MenuController(MenuService menuService) {
-        this.menuService = menuService;
+    @DeleteMapping("/upload/{fileId}")
+    public ResponseEntity<Void> deletePhoto(@PathVariable String fileId) {
+        // Telegram не позволяет удалять файлы через Bot API — игнорируем
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping
@@ -80,8 +61,18 @@ public class MenuController {
     }
 
     @GetMapping("/bot")
-    public ResponseEntity<List<MenuItemDto>> getMenuForBot() {
-        return ResponseEntity.ok(menuService.getMenuItemsForBot());
+    public ResponseEntity<List<MenuItemDto>> getMenuForBot(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String subcategory) {
+        return ResponseEntity.ok(menuService.getMenuItemsForBotFiltered(category, subcategory));
+    }
+
+    @GetMapping("/bot/items")
+    public ResponseEntity<List<MenuItemDto>> searchBotItems(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String subcategory,
+            @RequestParam(required = false) String description) {
+        return ResponseEntity.ok(menuService.searchBotItems(name, subcategory, description));
     }
 
     @GetMapping("/category/{category}")

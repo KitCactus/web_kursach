@@ -35,6 +35,7 @@ public class MenuService {
                 item.getPrice(),
                 item.getCategory(),
                 item.getSubcategory(),
+                item.getVolume(),
                 item.getPhotoFileId(),
                 item.getIsAvailable(),
                 item.getIsHidden()
@@ -55,6 +56,31 @@ public class MenuService {
 
     public List<MenuItemDto> getMenuItemsForBot() {
         return convertToDtoList(menuItemRepository.findAvailableForBot());
+    }
+
+    public List<MenuItemDto> getMenuItemsForBotFiltered(String category, String subcategory) {
+        if (subcategory != null && !subcategory.isBlank()) {
+            return convertToDtoList(menuItemRepository.findAvailableBySubcategory(subcategory));
+        }
+        if (category != null && !category.isBlank()) {
+            return convertToDtoList(menuItemRepository.findAvailableForBot().stream()
+                    .filter(m -> category.equals(m.getCategory())).toList());
+        }
+        return getMenuItemsForBot();
+    }
+
+    public List<MenuItemDto> searchBotItems(String name, String subcategory, String description) {
+        if (name != null && description != null) {
+            return menuItemRepository.findAvailableByNameAndDescription(name, description)
+                    .map(this::convertToDto).map(List::of).orElse(List.of());
+        }
+        if (name != null && subcategory != null) {
+            return convertToDtoList(menuItemRepository.findAvailableByNameAndSubcategory(name, subcategory));
+        }
+        if (name != null) {
+            return convertToDtoList(menuItemRepository.findAvailableByExactName(name));
+        }
+        return List.of();
     }
 
     public List<MenuItemDto> getMenuItemsByCategory(String category) {
@@ -91,6 +117,7 @@ public class MenuService {
                 dto.getCategory(),
                 dto.getSubcategory()
         );
+        item.setVolume(dto.getVolume());
         item.setPhotoFileId(dto.getPhotoFileId());
         item.setIsAvailable(dto.getIsAvailable() != null ? dto.getIsAvailable() : true);
         item.setIsHidden(dto.getIsHidden() != null ? dto.getIsHidden() : false);
@@ -110,6 +137,7 @@ public class MenuService {
         item.setPrice(dto.getPrice());
         item.setCategory(dto.getCategory());
         item.setSubcategory(dto.getSubcategory());
+        item.setVolume(dto.getVolume());
         if (dto.getPhotoFileId() != null) {
             item.setPhotoFileId(dto.getPhotoFileId());
         }

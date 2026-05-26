@@ -9,6 +9,7 @@ public class MenuItemDto {
     private BigDecimal price;
     private String category;
     private String subcategory;
+    private String volume;
     private String photoFileId;
     private Boolean isAvailable;
     private Boolean isHidden;
@@ -16,13 +17,14 @@ public class MenuItemDto {
     public MenuItemDto() {}
 
     public MenuItemDto(Long id, String name, String description, BigDecimal price, String category,
-                       String subcategory, String photoFileId, Boolean isAvailable, Boolean isHidden) {
+                       String subcategory, String volume, String photoFileId, Boolean isAvailable, Boolean isHidden) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.category = category;
         this.subcategory = subcategory;
+        this.volume = volume;
         this.photoFileId = photoFileId;
         this.isAvailable = isAvailable;
         this.isHidden = isHidden;
@@ -34,6 +36,7 @@ public class MenuItemDto {
     public BigDecimal getPrice() { return price; }
     public String getCategory() { return category; }
     public String getSubcategory() { return subcategory; }
+    public String getVolume() { return volume; }
     public String getPhotoFileId() { return photoFileId; }
     public Boolean getIsAvailable() { return isAvailable; }
     public Boolean getIsHidden() { return isHidden; }
@@ -44,6 +47,7 @@ public class MenuItemDto {
     public void setPrice(BigDecimal price) { this.price = price; }
     public void setCategory(String category) { this.category = category; }
     public void setSubcategory(String subcategory) { this.subcategory = subcategory; }
+    public void setVolume(String volume) { this.volume = volume; }
     public void setPhotoFileId(String photoFileId) { this.photoFileId = photoFileId; }
     public void setIsAvailable(Boolean isAvailable) { this.isAvailable = isAvailable; }
     public void setIsHidden(Boolean isHidden) { this.isHidden = isHidden; }

@@ -40,7 +40,8 @@ export class AuthService {
   }
 
   get isAdmin(): boolean {
-    return this.currentUser?.role === 'ADMIN';
+    const role = this.currentUser?.role ?? '';
+    return role === 'ADMIN' || role === 'ROLE_ADMIN';
   }
 
   get isStaff(): boolean {

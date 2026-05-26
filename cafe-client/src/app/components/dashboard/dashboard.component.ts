@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { OrderService } from '../../services/order.service';
+import { WebSocketService } from '../../services/websocket.service';
 import { PricePipe } from '../../pipes/price.pipe';
 
 @Component({
@@ -23,18 +24,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
   currentTime = '';
   currentDate = '';
   private timeInterval: any;
+  private wsSub: Subscription | null = null;
 
   constructor(
     private authService: AuthService,
     private orderService: OrderService,
+    private wsService: WebSocketService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private zone: NgZone
   ) {}
 
   ngOnInit(): void {
     this.currentUser = this.authService.currentUser;
     this.loadDashboardData();
     this.startClock();
+
+    this.wsService.connect();
+    this.wsSub = this.wsService.orders$.subscribe(event => {
+      this.zone.run(() => {
+        if (event.type === 'CREATED') {
+          this.todayOrders++;
+          if (event.order.status === 'PENDING') this.pendingOrders++;
+          this.loadRevenue();
+        } else if (event.type === 'STATUS_CHANGED') {
+          const prev = event.order.status;
+          // Пересчитываем ожидающие заказы при изменении статуса
+          this.refreshPendingCount();
+          if (prev === 'COMPLETED') this.loadRevenue();
+        }
+        this.cdr.markForCheck();
+      });
+    });
   }
 
   private startClock(): void {
@@ -52,17 +73,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       minute: '2-digit',
       second: '2-digit'
     });
-
-    const day = now.getDate();
     const monthNames = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
                        'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
     const weekdayNames = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
-
-    const month = monthNames[now.getMonth()];
-    const weekday = weekdayNames[now.getDay()];
-    const year = now.getFullYear();
-
-    this.currentDate = `${day} ${month}, ${weekday} ${year}`;
+    const day = now.getDate();
+    this.currentDate = `${day} ${monthNames[now.getMonth()]}, ${weekdayNames[now.getDay()]} ${now.getFullYear()}`;
   }
 
   loadDashboardData(): void {
@@ -76,11 +91,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.todayOrders = data.todayOrders.length;
         this.pendingOrders = data.pendingOrders.length;
         this.isLoading = false;
+        this.cdr.markForCheck();
       },
-      error: (err) => {
-        console.error('Ошибка загрузки данных дашборда:', err);
+      error: () => {
         this.isLoading = false;
+        this.cdr.markForCheck();
       }
+    });
+  }
+
+  private loadRevenue(): void {
+    this.orderService.getTodayRevenue().subscribe(r => {
+      this.todayRevenue = r || 0;
+      this.cdr.markForCheck();
+    });
+  }
+
+  private refreshPendingCount(): void {
+    this.orderService.getOrdersByStatus('PENDING').subscribe(orders => {
+      this.pendingOrders = orders.length;
+      this.cdr.markForCheck();
     });
   }
 
@@ -89,29 +119,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  navigateToOrders(): void {
-    this.router.navigate(['/orders']);
-  }
-
-  navigateToMenu(): void {
-    this.router.navigate(['/menu']);  // Исправлено: раньше был баг /staff/menu
-  }
-
+  navigateToOrders(): void { this.router.navigate(['/orders']); }
+  navigateToMenu(): void { this.router.navigate(['/menu']); }
   navigateToStaff(): void {
-    if (this.authService.isAdmin) {
-      this.router.navigate(['/admin/staff']);
-    }
+    if (this.authService.isAdmin) this.router.navigate(['/admin/staff']);
   }
-
   navigateToReports(): void {
-    if (this.authService.isAdmin) {
-      this.router.navigate(['/admin/reports']);
-    }
+    if (this.authService.isAdmin) this.router.navigate(['/admin/reports']);
   }
 
   ngOnDestroy(): void {
-    if (this.timeInterval) {
-      clearInterval(this.timeInterval);
-    }
+    if (this.timeInterval) clearInterval(this.timeInterval);
+    this.wsSub?.unsubscribe();
+    this.wsService.disconnect();
   }
 }

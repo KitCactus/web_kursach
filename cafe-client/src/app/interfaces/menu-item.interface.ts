@@ -8,6 +8,7 @@ export interface MenuItem {
   isAvailable: boolean;
   isHidden: boolean;
   subcategory?: string;
+  volume?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -19,6 +20,7 @@ export interface CreateMenuItemRequest {
   category: string;
   photoFileId?: string;
   subcategory?: string;
+  volume?: string;
 }
 
 export interface UpdateMenuItemRequest extends Partial<CreateMenuItemRequest> {

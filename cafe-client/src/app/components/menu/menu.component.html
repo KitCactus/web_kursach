@@ -77,7 +77,12 @@
               <p class="item-description">{{ item.description }}</p>
 
               <div class="item-footer">
-                <span class="item-price">{{ item.price | price }}</span>
+                <div class="item-price-block">
+                  <span class="item-price">{{ item.price | price }}</span>
+                  @if (item.volume) {
+                    <span class="item-volume">{{ item.volume }}</span>
+                  }
+                </div>
                 <div class="item-actions">
                   @if (isAdmin) {
                     <button class="action-button edit" (click)="openEditModal(item)" title="Редактировать">✏️</button>
@@ -138,7 +143,7 @@
 
         <div class="form-group">
           <label>Описание</label>
-          <textarea [(ngModel)]="newItem.description" placeholder="Введите описание (необязательно)"></textarea>
+          <textarea [(ngModel)]="newItem.description" placeholder="Введите описание"></textarea>
         </div>
 
         <div class="form-row">
@@ -171,9 +176,15 @@
         </div>
 
         <div class="form-group">
+          <label>Объём / Размер <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="newItem.volume" [class.input-error]="createErrors.volume" placeholder="Введите объем или граммовку.." />
+          @if (createErrors.volume) { <span class="field-error">{{ createErrors.volume }}</span> }
+        </div>
+
+        <div class="form-group">
           <label>Фото блюда</label>
-          @if (newItem.photoFileId) {
-            <img [src]="getPhotoUrl(newItem.photoFileId)" style="width:100%;height:300px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
+          @if (pendingPhotoPreview) {
+            <img [src]="pendingPhotoPreview" style="width:100%;height:300px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
           }
           <input type="file" accept="image/*" (change)="onPhotoSelected($event, false)" />
           @if (isUploadingPhoto) {
@@ -241,8 +252,16 @@
         </div>
 
         <div class="form-group">
+          <label>Объём / Размер <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="selectedItem.volume" [class.input-error]="editErrors.volume" placeholder="Например: 300 мл, 500 мл, S, L" />
+          @if (editErrors.volume) { <span class="field-error">{{ editErrors.volume }}</span> }
+        </div>
+
+        <div class="form-group">
           <label>Фото блюда</label>
-          @if (selectedItem.photoFileId) {
+          @if (pendingPhotoPreview) {
+            <img [src]="pendingPhotoPreview" style="width:100%;height:300px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
+          } @else if (selectedItem.photoFileId) {
             <img [src]="getPhotoUrl(selectedItem.photoFileId)" style="width:100%;height:300px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
           }
           <input type="file" accept="image/*" (change)="onPhotoSelected($event, true)" />

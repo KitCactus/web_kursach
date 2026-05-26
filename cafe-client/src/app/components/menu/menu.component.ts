@@ -31,8 +31,11 @@ export class MenuComponent implements OnInit {
   isCreateModalOpen = false;
   isEditModalOpen = false;
   selectedItem: MenuItem | null = null;
-  createErrors: { name?: string; price?: string; subcategory?: string; description?: string } = {};
-  editErrors: { name?: string; price?: string; subcategory?: string; description?: string } = {};
+  createErrors: { name?: string; price?: string; subcategory?: string; description?: string; volume?: string } = {};
+  editErrors: { name?: string; price?: string; subcategory?: string; description?: string; volume?: string } = {};
+
+  pendingPhotoFile: File | null = null;
+  pendingPhotoPreview: string | null = null;
 
   newItem: CreateMenuItemRequest = {
     name: '',
@@ -40,6 +43,7 @@ export class MenuComponent implements OnInit {
     price: 0,
     category: 'COFFEE',
     subcategory: '',
+    volume: '',
     photoFileId: ''
   };
 
@@ -60,9 +64,7 @@ export class MenuComponent implements OnInit {
 
   getPhotoUrl(photoFileId: string): string {
     if (!photoFileId) return '';
-    const baseUrl = environment.apiUrl.replace('/api', '');
-    const url = `${baseUrl}/uploads/${photoFileId}`;
-    return url;
+    return `${environment.apiUrl}/images/${photoFileId}`;
   }
 
   ngOnInit(): void {
@@ -133,10 +135,14 @@ export class MenuComponent implements OnInit {
   openCreateModal(): void {
     this.isCreateModalOpen = true;
     this.createErrors = {};
-    this.newItem = { name: '', description: '', price: 0, category: this.categories[0] || '', subcategory: '', photoFileId: '' };
+    this.newItem = { name: '', description: '', price: 0, category: this.categories[0] || '', subcategory: '', volume: '', photoFileId: '' };
   }
 
-  closeCreateModal(): void { this.isCreateModalOpen = false; }
+  closeCreateModal(): void {
+    this.isCreateModalOpen = false;
+    this.pendingPhotoFile = null;
+    this.pendingPhotoPreview = null;
+  }
 
   openEditModal(item: MenuItem): void {
     this.selectedItem = { ...item };
@@ -147,6 +153,8 @@ export class MenuComponent implements OnInit {
     this.isEditModalOpen = false;
     this.selectedItem = null;
     this.editErrors = {};
+    this.pendingPhotoFile = null;
+    this.pendingPhotoPreview = null;
   }
 
   createItem(): void {
@@ -165,23 +173,40 @@ export class MenuComponent implements OnInit {
       this.createErrors.price = 'Цена не должна превышать 100000 рублей';
     }
     if (!this.newItem.subcategory?.trim()) this.createErrors.subcategory = 'Выберите подкатегорию';
-    if (this.createErrors.name || this.createErrors.price || this.createErrors.subcategory || this.createErrors.description) return;
+    if (!this.newItem.volume?.trim()) this.createErrors.volume = 'Укажите объём или размер (например: 300 мл, S, L)';
+    if (this.createErrors.name || this.createErrors.price || this.createErrors.subcategory || this.createErrors.description || this.createErrors.volume) return;
 
     const userId = this.authService.currentUser?.id ?? 1;
+    const itemToCreate = { ...this.newItem };
+    const photoFile = this.pendingPhotoFile;
     this.closeCreateModal();
-    this.menuService.createMenuItem(this.newItem, userId).subscribe({
-      next: (created) => {
-        this.menuItems.push(created);
-        this.filterItems();
-        this.newItem = { name: '', description: '', price: 0, category: this.categories[0] || '', subcategory: '', photoFileId: '' };
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Error creating menu item:', error);
-        this.errorMessage = 'Не удалось создать блюдо. Попробуйте снова.';
-        this.cdr.detectChanges();
-      }
-    });
+
+    const doCreate = (fileId?: string) => {
+      if (fileId) itemToCreate.photoFileId = fileId;
+      this.menuService.createMenuItem(itemToCreate, userId).subscribe({
+        next: (created) => {
+          this.menuItems.push(created);
+          this.filterItems();
+          this.newItem = { name: '', description: '', price: 0, category: this.categories[0] || '', subcategory: '', photoFileId: '' };
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error creating menu item:', error);
+          this.errorMessage = 'Не удалось создать блюдо. Попробуйте снова.';
+          this.cdr.detectChanges();
+        }
+      });
+    };
+
+    if (photoFile) {
+      this.isUploadingPhoto = true;
+      this.menuService.uploadPhoto(photoFile).subscribe({
+        next: (fileId) => { this.isUploadingPhoto = false; doCreate(fileId); },
+        error: (err) => { this.isUploadingPhoto = false; console.error('Ошибка загрузки фото:', err); doCreate(); }
+      });
+    } else {
+      doCreate();
+    }
   }
 
   updateItem(): void {
@@ -201,30 +226,38 @@ export class MenuComponent implements OnInit {
       this.editErrors.price = 'Цена не должна превышать 100000 рублей';
     }
     if (!this.selectedItem.subcategory?.trim()) this.editErrors.subcategory = 'Выберите подкатегорию';
-    if (this.editErrors.name || this.editErrors.price || this.editErrors.subcategory || this.editErrors.description) return;
+    if (!this.selectedItem.volume?.trim()) this.editErrors.volume = 'Укажите объём или размер (например: 300 мл, S, L)';
+    if (this.editErrors.name || this.editErrors.price || this.editErrors.subcategory || this.editErrors.description || this.editErrors.volume) return;
 
     const item = { ...this.selectedItem };
     const oldItem = this.menuItems.find(i => i.id === item.id);
+    const photoFile = this.pendingPhotoFile;
     this.closeEditModal();
 
-    // Сразу обновляем в списке
-    const idx = this.menuItems.findIndex(i => i.id === item.id);
-    if (idx >= 0) {
-      this.menuItems[idx] = item;
-      this.filterItems();
-    }
-
-    this.menuService.updateMenuItem(item.id, item).subscribe({
-      next: () => { /* уже обновили выше */ },
-      error: (error) => {
-        if (idx >= 0 && oldItem) {
-          this.menuItems[idx] = oldItem;
-          this.filterItems();
+    const doUpdate = (fileId?: string) => {
+      if (fileId) item.photoFileId = fileId;
+      const idx = this.menuItems.findIndex(i => i.id === item.id);
+      if (idx >= 0) { this.menuItems[idx] = item; this.filterItems(); }
+      this.menuService.updateMenuItem(item.id, item).subscribe({
+        next: () => { this.cdr.detectChanges(); },
+        error: (error) => {
+          if (idx >= 0 && oldItem) { this.menuItems[idx] = oldItem; this.filterItems(); }
+          console.error('Error updating menu item:', error);
+          this.errorMessage = 'Не удалось обновить блюдо. Изменения отменены.';
+          this.cdr.detectChanges();
         }
-        console.error('Error updating menu item:', error);
-        this.errorMessage = 'Не удалось обновить блюдо. Изменения отменены.';
-      }
-    });
+      });
+    };
+
+    if (photoFile) {
+      this.isUploadingPhoto = true;
+      this.menuService.uploadPhoto(photoFile).subscribe({
+        next: (fileId) => { this.isUploadingPhoto = false; doUpdate(fileId); },
+        error: (err) => { this.isUploadingPhoto = false; console.error('Ошибка загрузки фото:', err); doUpdate(); }
+      });
+    } else {
+      doUpdate();
+    }
   }
 
   deleteItem(item: MenuItem): void {
@@ -281,20 +314,9 @@ export class MenuComponent implements OnInit {
   onPhotoSelected(event: Event, isEdit: boolean = false): void {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
-    this.isUploadingPhoto = true;
-    this.menuService.uploadPhoto(input.files[0]).subscribe({
-      next: (filename: string) => {
-        if (isEdit && this.selectedItem) {
-          this.selectedItem.photoFileId = filename;
-        } else {
-          this.newItem.photoFileId = filename;
-        }
-        this.isUploadingPhoto = false;
-      },
-      error: (error) => {
-        console.error('Error uploading photo:', error);
-        this.isUploadingPhoto = false;
-      }
-    });
+    const file = input.files[0];
+    this.pendingPhotoFile = file;
+    if (this.pendingPhotoPreview) URL.revokeObjectURL(this.pendingPhotoPreview);
+    this.pendingPhotoPreview = URL.createObjectURL(file);
   }
 }

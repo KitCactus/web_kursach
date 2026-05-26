@@ -64,7 +64,7 @@ public class MenuServiceTest {
         User user = new User("admin", "pass", null, "Admin", "79001234567");
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        MenuItemDto dto = new MenuItemDto(null, "Эспрессо", "desc", BigDecimal.valueOf(150), "COFFEE", "espresso", null, true, false);
+        MenuItemDto dto = new MenuItemDto(null, "Эспрессо", "desc", BigDecimal.valueOf(150), "COFFEE", "espresso", "200 мл", null, true, false);
         MenuItem saved = makeItem(10L, "Эспрессо", "COFFEE", BigDecimal.valueOf(150));
         when(menuItemRepository.save(any(MenuItem.class))).thenReturn(saved);
 
@@ -79,7 +79,7 @@ public class MenuServiceTest {
         User user = new User("admin", "pass", null, "Admin", "79001234567");
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        MenuItemDto dto = new MenuItemDto(null, "", "desc", BigDecimal.valueOf(150), "COFFEE", "sub", null, true, false);
+        MenuItemDto dto = new MenuItemDto(null, "", "desc", BigDecimal.valueOf(150), "COFFEE", "sub", "300 мл", null, true, false);
 
         assertThrows(RuntimeException.class, () -> menuService.createMenuItem(dto, 1L));
     }
@@ -89,7 +89,7 @@ public class MenuServiceTest {
         User user = new User("admin", "pass", null, "Admin", "79001234567");
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        MenuItemDto dto = new MenuItemDto(null, "Чай", "desc", BigDecimal.ZERO, "TEA", "sub", null, true, false);
+        MenuItemDto dto = new MenuItemDto(null, "Чай", "desc", BigDecimal.ZERO, "TEA", "sub", "300 мл", null, true, false);
 
         assertThrows(RuntimeException.class, () -> menuService.createMenuItem(dto, 1L));
     }

@@ -27,6 +27,9 @@ public class MenuItem {
     @Column(length = 50)
     private String subcategory;
 
+    @Column(length = 50)
+    private String volume;
+
     @Column(name = "photo_file_id", length = 255)
     private String photoFileId;
 
@@ -73,6 +76,9 @@ public class MenuItem {
 
     public String getSubcategory() { return subcategory; }
     public void setSubcategory(String subcategory) { this.subcategory = subcategory; }
+
+    public String getVolume() { return volume; }
+    public void setVolume(String volume) { this.volume = volume; }
 
     public String getPhotoFileId() { return photoFileId; }
     public void setPhotoFileId(String photoFileId) { this.photoFileId = photoFileId; }
